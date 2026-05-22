@@ -148,13 +148,13 @@ scan_lane_a() {
 
   jq -n \
     --arg ts "$(iso_ts)" \
-    --argjson formula_count "$formula_count" \
-    --argjson cask_count "$cask_count" \
-    --argjson tap_count "$tap_count" \
-    --argjson mas_count "$mas_count" \
-    --argjson orphan_count "$orphan_count" \
-    --argjson formula_highlights "$formula_highlights" \
-    --argjson cask_highlights "$cask_highlights" \
+    --argjson formula_count "${formula_count:-0}" \
+    --argjson cask_count "${cask_count:-0}" \
+    --argjson tap_count "${tap_count:-0}" \
+    --argjson mas_count "${mas_count:-0}" \
+    --argjson orphan_count "${orphan_count:-0}" \
+    --argjson formula_highlights "${formula_highlights:-[]}" \
+    --argjson cask_highlights "${cask_highlights:-[]}" \
     '{
       name: "Applications",
       scanned_at: $ts,
@@ -199,13 +199,13 @@ scan_lane_b() {
   jq -n \
     --arg ts "$(iso_ts)" \
     --arg chezmoi_source "$chezmoi_source" \
-    --argjson chezmoi_unpushed "$chezmoi_unpushed" \
-    --argjson dotfiles_count "$dotfiles_count" \
-    --argjson paths_d_count "$paths_d_count" \
-    --argjson bin_count "$bin_count" \
-    --argjson local_bin_count "$local_bin_count" \
-    --argjson hosts_lines "$hosts_lines" \
-    --argjson sudoers_files "$sudoers_files" \
+    --argjson chezmoi_unpushed "${chezmoi_unpushed:-false}" \
+    --argjson dotfiles_count "${dotfiles_count:-0}" \
+    --argjson paths_d_count "${paths_d_count:-0}" \
+    --argjson bin_count "${bin_count:-0}" \
+    --argjson local_bin_count "${local_bin_count:-0}" \
+    --argjson hosts_lines "${hosts_lines:-0}" \
+    --argjson sudoers_files "${sudoers_files:-0}" \
     '{
       name: "Shell + PATH + Custom Scripts",
       scanned_at: $ts,
@@ -269,13 +269,13 @@ scan_lane_c() {
 
   jq -n \
     --arg ts "$(iso_ts)" \
-    --argjson mise_tools "$mise_tools" \
-    --argjson pipx_count "$pipx_count" \
-    --argjson npm_count "$npm_count" \
-    --argjson cargo_count "$cargo_count" \
-    --argjson gem_count "$gem_count" \
-    --argjson go_count "$go_count" \
-    --argjson composer_count "$composer_count" \
+    --argjson mise_tools "${mise_tools:-[]}" \
+    --argjson pipx_count "${pipx_count:-0}" \
+    --argjson npm_count "${npm_count:-0}" \
+    --argjson cargo_count "${cargo_count:-0}" \
+    --argjson gem_count "${gem_count:-0}" \
+    --argjson go_count "${go_count:-0}" \
+    --argjson composer_count "${composer_count:-0}" \
     '{
       name: "Language Toolchains + Globals",
       scanned_at: $ts,
@@ -319,14 +319,14 @@ scan_lane_d() {
 
   jq -n \
     --arg ts "$(iso_ts)" \
-    --argjson defaults_count "$defaults_count" \
-    --argjson appsupport_count "$appsupport_count" \
-    --argjson containers_count "$containers_count" \
-    --argjson group_containers_count "$group_containers_count" \
-    --argjson user_fonts "$user_fonts" \
-    --argjson system_fonts "$system_fonts" \
-    --argjson stickies_count "$stickies_count" \
-    --argjson mail_rules_present "$mail_rules_present" \
+    --argjson defaults_count "${defaults_count:-0}" \
+    --argjson appsupport_count "${appsupport_count:-0}" \
+    --argjson containers_count "${containers_count:-0}" \
+    --argjson group_containers_count "${group_containers_count:-0}" \
+    --argjson user_fonts "${user_fonts:-0}" \
+    --argjson system_fonts "${system_fonts:-0}" \
+    --argjson stickies_count "${stickies_count:-0}" \
+    --argjson mail_rules_present "${mail_rules_present:-false}" \
     '{
       name: "GUI App Configs",
       scanned_at: $ts,
@@ -368,8 +368,8 @@ scan_lane_e() {
 
   jq -n \
     --arg ts "$(iso_ts)" \
-    --argjson browsers_present "$browsers_present" \
-    --argjson chrome_ext_count "$chrome_ext_count" \
+    --argjson browsers_present "${browsers_present:-[]}" \
+    --argjson chrome_ext_count "${chrome_ext_count:-0}" \
     '{
       name: "Browsers",
       scanned_at: $ts,
@@ -401,15 +401,15 @@ scan_lane_f() {
 
   jq -n \
     --arg ts "$(iso_ts)" \
-    --argjson vscode_count "$vscode_count" \
-    --argjson cursor_count "$cursor_count" \
-    --argjson zed_present "$zed_present" \
-    --argjson jetbrains_dirs "$jetbrains_dirs" \
-    --argjson iterm2_present "$iterm2_present" \
-    --argjson warp_present "$warp_present" \
-    --argjson ghostty_present "$ghostty_present" \
-    --argjson alacritty_present "$alacritty_present" \
-    --argjson kitty_present "$kitty_present" \
+    --argjson vscode_count "${vscode_count:-0}" \
+    --argjson cursor_count "${cursor_count:-0}" \
+    --argjson zed_present "${zed_present:-false}" \
+    --argjson jetbrains_dirs "${jetbrains_dirs:-[]}" \
+    --argjson iterm2_present "${iterm2_present:-false}" \
+    --argjson warp_present "${warp_present:-false}" \
+    --argjson ghostty_present "${ghostty_present:-false}" \
+    --argjson alacritty_present "${alacritty_present:-false}" \
+    --argjson kitty_present "${kitty_present:-false}" \
     '{
       name: "IDEs + Terminals",
       scanned_at: $ts,
@@ -460,15 +460,15 @@ scan_lane_g() {
   jq -n \
     --arg ts "$(iso_ts)" \
     --arg pg_version "$pg_version" \
-    --argjson pg_dbs "$pg_dbs" \
-    --argjson pg_size_bytes "$pg_size_bytes" \
-    --argjson mysql_present "$mysql_present" \
-    --argjson redis_present "$redis_present" \
-    --argjson mongo_present "$mongo_present" \
-    --argjson docker_contexts "$docker_contexts" \
-    --argjson kube_present "$kube_present" \
-    --argjson krew_count "$krew_count" \
-    --argjson helm_repos "$helm_repos" \
+    --argjson pg_dbs "${pg_dbs:-[]}" \
+    --argjson pg_size_bytes "${pg_size_bytes:-0}" \
+    --argjson mysql_present "${mysql_present:-false}" \
+    --argjson redis_present "${redis_present:-false}" \
+    --argjson mongo_present "${mongo_present:-false}" \
+    --argjson docker_contexts "${docker_contexts:-[]}" \
+    --argjson kube_present "${kube_present:-false}" \
+    --argjson krew_count "${krew_count:-0}" \
+    --argjson helm_repos "${helm_repos:-[]}" \
     '{
       name: "Databases + Containers",
       scanned_at: $ts,
@@ -514,13 +514,13 @@ scan_lane_h() {
 
   jq -n \
     --arg ts "$(iso_ts)" \
-    --argjson user_launchagents "$user_launchagents" \
-    --argjson system_launchagents "$system_launchagents" \
-    --argjson system_launchdaemons "$system_launchdaemons" \
-    --argjson brew_services_running "$brew_services_running" \
-    --argjson pm2_processes "$pm2_processes" \
-    --argjson cron_lines "$cron_lines" \
-    --argjson login_items "$login_items" \
+    --argjson user_launchagents "${user_launchagents:-0}" \
+    --argjson system_launchagents "${system_launchagents:-0}" \
+    --argjson system_launchdaemons "${system_launchdaemons:-0}" \
+    --argjson brew_services_running "${brew_services_running:-false}" \
+    --argjson pm2_processes "${pm2_processes:-[]}" \
+    --argjson cron_lines "${cron_lines:-0}" \
+    --argjson login_items "${login_items:-0}" \
     '{
       name: "Background Services",
       scanned_at: $ts,
@@ -572,17 +572,17 @@ scan_lane_i() {
 
   jq -n \
     --arg ts "$(iso_ts)" \
-    --argjson git_config_present "$git_config_present" \
-    --argjson gh_hosts_present "$gh_hosts_present" \
-    --argjson aws_profiles "$aws_profiles" \
-    --argjson gcloud_present "$gcloud_present" \
-    --argjson azure_present "$azure_present" \
-    --argjson cloudflared_present "$cloudflared_present" \
-    --argjson doctl_present "$doctl_present" \
-    --argjson tokens_present "$tokens_present" \
-    --argjson ssh_keys "$ssh_keys" \
-    --argjson gpg_secret_keys "$gpg_secret_keys" \
-    --argjson wg_tunnels "$wg_tunnels" \
+    --argjson git_config_present "${git_config_present:-false}" \
+    --argjson gh_hosts_present "${gh_hosts_present:-false}" \
+    --argjson aws_profiles "${aws_profiles:-[]}" \
+    --argjson gcloud_present "${gcloud_present:-false}" \
+    --argjson azure_present "${azure_present:-false}" \
+    --argjson cloudflared_present "${cloudflared_present:-false}" \
+    --argjson doctl_present "${doctl_present:-false}" \
+    --argjson tokens_present "${tokens_present:-false}" \
+    --argjson ssh_keys "${ssh_keys:-[]}" \
+    --argjson gpg_secret_keys "${gpg_secret_keys:-[]}" \
+    --argjson wg_tunnels "${wg_tunnels:-[]}" \
     '{
       name: "Credentials + Auth",
       scanned_at: $ts,
@@ -617,8 +617,8 @@ scan_lane_j() {
 
   jq -n \
     --arg ts "$(iso_ts)" \
-    --argjson tcc_accessible "$tcc_accessible" \
-    --argjson tcc_grant_count "$tcc_grant_count" \
+    --argjson tcc_accessible "${tcc_accessible:-false}" \
+    --argjson tcc_grant_count "${tcc_grant_count:-0}" \
     '{
       name: "Manual / Deferred",
       scanned_at: $ts,
@@ -654,17 +654,17 @@ jq -n \
   --arg macos_codename "$MACOS_CODENAME" \
   --arg arch "$ARCH_VAL" \
   --arg user "$USER_VAL" \
-  --argjson lane_a "$LANE_A" \
-  --argjson lane_b "$LANE_B" \
-  --argjson lane_c "$LANE_C" \
-  --argjson lane_d "$LANE_D" \
-  --argjson lane_e "$LANE_E" \
-  --argjson lane_f "$LANE_F" \
-  --argjson lane_g "$LANE_G" \
-  --argjson lane_h "$LANE_H" \
-  --argjson lane_i "$LANE_I" \
-  --argjson lane_j "$LANE_J" \
-  --argjson opt_outs "$PRIOR_OPTOUTS" \
+  --argjson lane_a "${LANE_A:-0}" \
+  --argjson lane_b "${LANE_B:-0}" \
+  --argjson lane_c "${LANE_C:-0}" \
+  --argjson lane_d "${LANE_D:-0}" \
+  --argjson lane_e "${LANE_E:-0}" \
+  --argjson lane_f "${LANE_F:-0}" \
+  --argjson lane_g "${LANE_G:-0}" \
+  --argjson lane_h "${LANE_H:-0}" \
+  --argjson lane_i "${LANE_I:-0}" \
+  --argjson lane_j "${LANE_J:-0}" \
+  --argjson opt_outs "${PRIOR_OPTOUTS:-[]}" \
   '{
     version: "1",
     generated_at: $ts,
