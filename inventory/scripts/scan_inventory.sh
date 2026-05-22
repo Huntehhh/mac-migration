@@ -199,7 +199,7 @@ scan_lane_b() {
   jq -n \
     --arg ts "$(iso_ts)" \
     --arg chezmoi_source "$chezmoi_source" \
-    --argjson chezmoi_unpushed "${chezmoi_unpushed:-false}" \
+    --argjson chezmoi_unpushed "${chezmoi_unpushed:-0}" \
     --argjson dotfiles_count "${dotfiles_count:-0}" \
     --argjson paths_d_count "${paths_d_count:-0}" \
     --argjson bin_count "${bin_count:-0}" \
@@ -269,7 +269,7 @@ scan_lane_c() {
 
   jq -n \
     --arg ts "$(iso_ts)" \
-    --argjson mise_tools "${mise_tools:-[]}" \
+    --argjson mise_tools "${mise_tools:-0}" \
     --argjson pipx_count "${pipx_count:-0}" \
     --argjson npm_count "${npm_count:-0}" \
     --argjson cargo_count "${cargo_count:-0}" \
@@ -368,7 +368,7 @@ scan_lane_e() {
 
   jq -n \
     --arg ts "$(iso_ts)" \
-    --argjson browsers_present "${browsers_present:-[]}" \
+    --argjson browsers_present "${browsers_present:-0}" \
     --argjson chrome_ext_count "${chrome_ext_count:-0}" \
     '{
       name: "Browsers",
@@ -404,7 +404,7 @@ scan_lane_f() {
     --argjson vscode_count "${vscode_count:-0}" \
     --argjson cursor_count "${cursor_count:-0}" \
     --argjson zed_present "${zed_present:-false}" \
-    --argjson jetbrains_dirs "${jetbrains_dirs:-[]}" \
+    --argjson jetbrains_dirs "${jetbrains_dirs:-0}" \
     --argjson iterm2_present "${iterm2_present:-false}" \
     --argjson warp_present "${warp_present:-false}" \
     --argjson ghostty_present "${ghostty_present:-false}" \
@@ -460,15 +460,15 @@ scan_lane_g() {
   jq -n \
     --arg ts "$(iso_ts)" \
     --arg pg_version "$pg_version" \
-    --argjson pg_dbs "${pg_dbs:-[]}" \
+    --argjson pg_dbs "${pg_dbs:-0}" \
     --argjson pg_size_bytes "${pg_size_bytes:-0}" \
     --argjson mysql_present "${mysql_present:-false}" \
     --argjson redis_present "${redis_present:-false}" \
     --argjson mongo_present "${mongo_present:-false}" \
-    --argjson docker_contexts "${docker_contexts:-[]}" \
+    --argjson docker_contexts "${docker_contexts:-0}" \
     --argjson kube_present "${kube_present:-false}" \
     --argjson krew_count "${krew_count:-0}" \
-    --argjson helm_repos "${helm_repos:-[]}" \
+    --argjson helm_repos "${helm_repos:-0}" \
     '{
       name: "Databases + Containers",
       scanned_at: $ts,
@@ -517,8 +517,8 @@ scan_lane_h() {
     --argjson user_launchagents "${user_launchagents:-0}" \
     --argjson system_launchagents "${system_launchagents:-0}" \
     --argjson system_launchdaemons "${system_launchdaemons:-0}" \
-    --argjson brew_services_running "${brew_services_running:-false}" \
-    --argjson pm2_processes "${pm2_processes:-[]}" \
+    --argjson brew_services_running "${brew_services_running:-0}" \
+    --argjson pm2_processes "${pm2_processes:-0}" \
     --argjson cron_lines "${cron_lines:-0}" \
     --argjson login_items "${login_items:-0}" \
     '{
@@ -574,15 +574,15 @@ scan_lane_i() {
     --arg ts "$(iso_ts)" \
     --argjson git_config_present "${git_config_present:-false}" \
     --argjson gh_hosts_present "${gh_hosts_present:-false}" \
-    --argjson aws_profiles "${aws_profiles:-[]}" \
+    --argjson aws_profiles "${aws_profiles:-0}" \
     --argjson gcloud_present "${gcloud_present:-false}" \
     --argjson azure_present "${azure_present:-false}" \
     --argjson cloudflared_present "${cloudflared_present:-false}" \
     --argjson doctl_present "${doctl_present:-false}" \
-    --argjson tokens_present "${tokens_present:-false}" \
-    --argjson ssh_keys "${ssh_keys:-[]}" \
-    --argjson gpg_secret_keys "${gpg_secret_keys:-[]}" \
-    --argjson wg_tunnels "${wg_tunnels:-[]}" \
+    --argjson tokens_present "${tokens_present:-0}" \
+    --argjson ssh_keys "${ssh_keys:-0}" \
+    --argjson gpg_secret_keys "${gpg_secret_keys:-0}" \
+    --argjson wg_tunnels "${wg_tunnels:-0}" \
     '{
       name: "Credentials + Auth",
       scanned_at: $ts,
