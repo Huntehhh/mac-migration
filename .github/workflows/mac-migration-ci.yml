@@ -200,7 +200,10 @@ jobs:
         env:
           BUNDLE: ${{ env.BUNDLE_DIR }}
         run: |
-          bash capture/scripts/package_bundle.sh --tarball || true
+          # CI exercises lanes A/B/C/H/I — D/E/F/G need GUI apps/browsers/IDEs/databases
+          # not present on stock runners. --skip-verify lets package_bundle accept
+          # the partial-but-real bundle. Real-user runs will have all opted-in lanes.
+          bash capture/scripts/package_bundle.sh --tarball --skip-verify || true
           ls -la "$BUNDLE/"
           if [ -f "$BUNDLE/manifest.sha256" ]; then
             head -5 "$BUNDLE/manifest.sha256"
