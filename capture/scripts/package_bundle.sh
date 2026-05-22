@@ -41,7 +41,7 @@ MAC_VERSION_HELPER="$SKILL_DIR/scripts/detect_macos_version.sh"
 MANIFEST="$BUNDLE/manifest.json"
 
 if [ ! -f "$MANIFEST" ]; then
-  echo "package_bundle.sh: $MANIFEST not found — run inventory + capture first." >&2
+  echo "package_bundle.sh: $MANIFEST not found -- run inventory + capture first." >&2
   exit 3
 fi
 
@@ -123,7 +123,7 @@ bundle_size_mb="$(du -sm "$BUNDLE" 2>/dev/null | awk '{print $1}' || echo 0)"
 
 if [ "$DO_TARBALL" = "1" ]; then
   if ! command -v zstd >/dev/null 2>&1 && ! tar --help 2>/dev/null | grep -q -- '--zstd'; then
-    "$AUDIT" package warn "zstd not available — falling back to gzip"
+    "$AUDIT" package warn "zstd not available -- falling back to gzip"
     tarball_path="${BUNDLE%/}.tar.gz"
     "$AUDIT" package start "Creating $tarball_path"
     if tar -czf "$tarball_path" -C "$(dirname "$BUNDLE")" "$(basename "$BUNDLE")" 2>/dev/null; then
@@ -156,7 +156,7 @@ fi
 
 echo ""
 echo "=================================================================="
-echo "  Mac Migration — Capture Complete"
+echo "  Mac Migration -- Capture Complete"
 echo "=================================================================="
 echo "  Source Mac:   ${mac_version:-unknown macOS version}"
 echo "  Bundle:       $BUNDLE"

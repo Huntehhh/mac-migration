@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# diff_state.sh — main diff engine for mac-migration Phase 4.
+# diff_state.sh -- main diff engine for mac-migration Phase 4.
 #
 # Modes:
 #   diff_state.sh                  Verify mode: compare $BUNDLE/manifest.json -> current Mac state.
@@ -170,7 +170,7 @@ scan_current_state() {
 
   # Validate that what we wrote is actually JSON before returning it.
   if ! jq empty "$tmp" 2>/dev/null; then
-    echo "diff_state.sh: internal error — generated state is invalid JSON" >&2
+    echo "diff_state.sh: internal error -- generated state is invalid JSON" >&2
     cat "$tmp" >&2
     rm -f "$tmp"
     exit 2
@@ -205,7 +205,7 @@ compare_lane() {
   if [ "$cur_captured" != "true" ]; then
     local reason
     reason=$(jq -r '.skipped_reason // "unknown"' <<<"$cur_lane")
-    echo "- Status: FAIL — lane present in reference but not detected on current Mac ($reason)."
+    echo "- Status: FAIL -- lane present in reference but not detected on current Mac ($reason)."
     LANE_FAIL=1
     echo ""
     return
@@ -263,7 +263,7 @@ compare_lane() {
       if [ -z "$missing" ]; then
         echo "- Status: PASS"
       else
-        echo "- Status: FAIL — tool-version mismatches:"
+        echo "- Status: FAIL -- tool-version mismatches:"
         printf '%s' "$missing"
         echo "- Remediation: \`mise install\` from $BUNDLE/manifests/.tool-versions"
         LANE_FAIL=1
@@ -290,7 +290,7 @@ compare_lane() {
       if [ -z "$missing" ]; then
         echo "- Status: PASS"
       else
-        echo "- Status: FAIL — browsers not installed:"
+        echo "- Status: FAIL -- browsers not installed:"
         echo "$missing" | sed 's/^/    - /'
         echo "- Remediation: re-run \`brew bundle\` (browsers ship as casks)"
         LANE_FAIL=1
@@ -358,7 +358,7 @@ compare_lane() {
       if [ -z "$fails" ]; then
         echo "- Status: PASS"
       else
-        echo "- Status: FAIL — credential files missing:"
+        echo "- Status: FAIL -- credential files missing:"
         printf '%s' "$fails"
         echo "- Remediation: unseal $BUNDLE/credentials/credentials.tar.gz.gpg via \`scripts/encrypt_creds.sh unseal\`"
         LANE_FAIL=1
@@ -400,7 +400,7 @@ emit_report() {
     if [ "$LANE_FAIL" -eq 0 ]; then
       echo "## Verdict: ALL LANES PASS"
     else
-      echo "## Verdict: ONE OR MORE LANES FAILED — see remediation notes above"
+      echo "## Verdict: ONE OR MORE LANES FAILED -- see remediation notes above"
     fi
   } > "$out_path"
 
@@ -419,7 +419,7 @@ case "$MODE" in
     ;;
 
   drift)
-    test -f "$BASELINE" || { echo "diff_state.sh: no baseline at $BASELINE — run --write-baseline first" >&2; exit 2; }
+    test -f "$BASELINE" || { echo "diff_state.sh: no baseline at $BASELINE -- run --write-baseline first" >&2; exit 2; }
     jq empty "$BASELINE" 2>/dev/null || { echo "diff_state.sh: baseline at $BASELINE is invalid JSON" >&2; exit 2; }
     out="$HOME/.mac-migration/drift-report-$(today).md"
     if emit_report "$BASELINE" "drift baseline ($BASELINE)" "$out"; then
@@ -430,7 +430,7 @@ case "$MODE" in
     ;;
 
   verify)
-    test -f "$BUNDLE/manifest.json" || { echo "diff_state.sh: no manifest at $BUNDLE/manifest.json — run capture first" >&2; exit 2; }
+    test -f "$BUNDLE/manifest.json" || { echo "diff_state.sh: no manifest at $BUNDLE/manifest.json -- run capture first" >&2; exit 2; }
     jq empty "$BUNDLE/manifest.json" 2>/dev/null || { echo "diff_state.sh: $BUNDLE/manifest.json is invalid JSON" >&2; exit 2; }
     out="$BUNDLE/DIFF-REPORT.md"
     if emit_report "$BUNDLE/manifest.json" "migration bundle ($BUNDLE/manifest.json)" "$out"; then
@@ -441,7 +441,7 @@ case "$MODE" in
     ;;
 
   *)
-    echo "diff_state.sh: internal error — unknown mode $MODE" >&2
+    echo "diff_state.sh: internal error -- unknown mode $MODE" >&2
     exit 3
     ;;
 esac

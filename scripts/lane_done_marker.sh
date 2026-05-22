@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# lane_done_marker.sh — manage .done/<lane> markers for idempotent re-runs.
+# lane_done_marker.sh -- manage .done/<lane> markers for idempotent re-runs.
 #
 # Usage:
 #   lane_done_marker.sh set    <lane>   # write $BUNDLE/.done/<lane> with ISO timestamp

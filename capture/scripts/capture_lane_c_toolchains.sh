@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # capture_lane_c_toolchains.sh
-# Lane C — Language toolchains + global packages
+# Lane C -- Language toolchains + global packages
 #
 # Sub-modules (each gated on `command -v <tool>`):
 #   C1  mise (.tool-versions + config.toml)
@@ -38,7 +38,7 @@ LANE_ID="lane-c-toolchains"
 MANIFEST="$BUNDLE/manifest.json"
 
 if [ ! -f "$MANIFEST" ]; then
-  echo "capture_lane_c_toolchains.sh: $MANIFEST not found — run inventory first." >&2
+  echo "capture_lane_c_toolchains.sh: $MANIFEST not found -- run inventory first." >&2
   exit 3
 fi
 
@@ -54,11 +54,11 @@ if opt_out_lane; then
 fi
 
 if [ "$FORCE" != "1" ] && bash "$DONE_HELPER" check "$LANE_ID" >/dev/null 2>&1; then
-  "$AUDIT" "$LANE_ID" lane skip "Already done — use --force to re-capture"
+  "$AUDIT" "$LANE_ID" lane skip "Already done -- use --force to re-capture"
   exit 0
 fi
 
-"$AUDIT" "$LANE_ID" lane start "Lane C — Toolchains (dry_run=$DRY_RUN, force=$FORCE)"
+"$AUDIT" "$LANE_ID" lane start "Lane C -- Toolchains (dry_run=$DRY_RUN, force=$FORCE)"
 
 # --- C1. mise -----------------------------------------------------------
 
@@ -84,7 +84,7 @@ if ! opt_out_sub mise; then
     "$AUDIT" "$LANE_ID" mise ok "Copied $copied mise file(s)"
   fi
   if [ "$copied" -eq 0 ] && [ "$DRY_RUN" != "1" ]; then
-    "$AUDIT" "$LANE_ID" mise info "No mise config found — install mise on new Mac if desired"
+    "$AUDIT" "$LANE_ID" mise info "No mise config found -- install mise on new Mac if desired"
   fi
 else
   "$AUDIT" "$LANE_ID" mise skip "Opted out via manifest"
@@ -189,7 +189,7 @@ if ! opt_out_sub go; then
         "$AUDIT" "$LANE_ID" go start "Listing $gobin"
         ls -1 "$gobin" > "$BUNDLE/manifests/go-bin.txt" 2>/dev/null || true
         "$AUDIT" "$LANE_ID" go ok "Wrote manifests/go-bin.txt"
-        "$AUDIT" "$LANE_ID" go info "Go has no install-from-list — restore is manual 'go install <path>@latest' per entry"
+        "$AUDIT" "$LANE_ID" go info "Go has no install-from-list -- restore is manual 'go install <path>@latest' per entry"
       fi
     else
       "$AUDIT" "$LANE_ID" go skip "No GOPATH/bin directory"

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # capture_lane_i_creds.sh
-# Lane I — Credentials + Auth
+# Lane I -- Credentials + Auth
 #
-# Sub-modules — all collated under $BUNDLE/credentials/, then GPG-sealed:
+# Sub-modules -- all collated under $BUNDLE/credentials/, then GPG-sealed:
 #   I1  SSH  - ~/.ssh/
 #   I2  GPG  - ~/.gnupg/ + exported secret keys + ownertrust
 #   I3  Cloud CLIs - AWS, gcloud, Azure, Cloudflare, DigitalOcean, Linode
@@ -40,7 +40,7 @@ LANE_ID="lane-i-creds"
 MANIFEST="$BUNDLE/manifest.json"
 
 if [ ! -f "$MANIFEST" ]; then
-  echo "capture_lane_i_creds.sh: $MANIFEST not found — run inventory first." >&2
+  echo "capture_lane_i_creds.sh: $MANIFEST not found -- run inventory first." >&2
   exit 3
 fi
 
@@ -56,11 +56,11 @@ if opt_out_lane; then
 fi
 
 if [ "$FORCE" != "1" ] && bash "$DONE_HELPER" check "$LANE_ID" >/dev/null 2>&1; then
-  "$AUDIT" "$LANE_ID" lane skip "Already done — use --force to re-capture"
+  "$AUDIT" "$LANE_ID" lane skip "Already done -- use --force to re-capture"
   exit 0
 fi
 
-"$AUDIT" "$LANE_ID" lane start "Lane I — Credentials (dry_run=$DRY_RUN, force=$FORCE)"
+"$AUDIT" "$LANE_ID" lane start "Lane I -- Credentials (dry_run=$DRY_RUN, force=$FORCE)"
 
 # --- I1. SSH ------------------------------------------------------------
 
@@ -153,7 +153,7 @@ if ! opt_out_sub git_and_tokens; then
     if [ -f ~/.config/gh/hosts.yml ]; then
       cp -p ~/.config/gh/hosts.yml "$BUNDLE/credentials/gh/hosts.yml" \
         && "$AUDIT" "$LANE_ID" git_and_tokens ok "Captured ~/.config/gh/hosts.yml"
-      "$AUDIT" "$LANE_ID" git_and_tokens info "gh auth setup-git embeds absolute /opt/homebrew/bin/gh path — verify on new Mac"
+      "$AUDIT" "$LANE_ID" git_and_tokens info "gh auth setup-git embeds absolute /opt/homebrew/bin/gh path -- verify on new Mac"
     fi
     for f_pair in \
       ".npmrc:npmrc" \
@@ -172,9 +172,9 @@ if ! opt_out_sub git_and_tokens; then
       fi
     done
     if [ -f ~/.npmrc ] && grep -q "_authToken=" ~/.npmrc 2>/dev/null; then
-      "$AUDIT" "$LANE_ID" git_and_tokens warn "~/.npmrc contains _authToken= — npm classic tokens REVOKED Nov-Dec 2025. Regenerate granular tokens before relying on bundle."
+      "$AUDIT" "$LANE_ID" git_and_tokens warn "~/.npmrc contains _authToken= -- npm classic tokens REVOKED Nov-Dec 2025. Regenerate granular tokens before relying on bundle."
     fi
-    "$AUDIT" "$LANE_ID" git_and_tokens info "osxkeychain credential helper data lives in Keychain — does NOT migrate. Re-auth on new Mac."
+    "$AUDIT" "$LANE_ID" git_and_tokens info "osxkeychain credential helper data lives in Keychain -- does NOT migrate. Re-auth on new Mac."
   fi
 else
   "$AUDIT" "$LANE_ID" git_and_tokens skip "Opted out via manifest"
@@ -214,7 +214,7 @@ else
   if bash "$ENCRYPT_HELPER" seal; then
     "$AUDIT" "$LANE_ID" seal ok "Credentials sealed to credentials.tar.gz.gpg, cleartext shredded"
   else
-    "$AUDIT" "$LANE_ID" seal fail "encrypt_creds.sh seal failed — cleartext credentials/ still present, do NOT ship bundle"
+    "$AUDIT" "$LANE_ID" seal fail "encrypt_creds.sh seal failed -- cleartext credentials/ still present, do NOT ship bundle"
     exit 41
   fi
 fi

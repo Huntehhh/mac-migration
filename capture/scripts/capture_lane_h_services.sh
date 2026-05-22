@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # capture_lane_h_services.sh
-# Lane H — Background services
+# Lane H -- Background services
 #
 # Sub-modules:
 #   H1  User LaunchAgents (~/Library/LaunchAgents)
@@ -39,7 +39,7 @@ LANE_ID="lane-h-services"
 MANIFEST="$BUNDLE/manifest.json"
 
 if [ ! -f "$MANIFEST" ]; then
-  echo "capture_lane_h_services.sh: $MANIFEST not found — run inventory first." >&2
+  echo "capture_lane_h_services.sh: $MANIFEST not found -- run inventory first." >&2
   exit 3
 fi
 
@@ -55,11 +55,11 @@ if opt_out_lane; then
 fi
 
 if [ "$FORCE" != "1" ] && bash "$DONE_HELPER" check "$LANE_ID" >/dev/null 2>&1; then
-  "$AUDIT" "$LANE_ID" lane skip "Already done — use --force to re-capture"
+  "$AUDIT" "$LANE_ID" lane skip "Already done -- use --force to re-capture"
   exit 0
 fi
 
-"$AUDIT" "$LANE_ID" lane start "Lane H — Background services (dry_run=$DRY_RUN, force=$FORCE)"
+"$AUDIT" "$LANE_ID" lane start "Lane H -- Background services (dry_run=$DRY_RUN, force=$FORCE)"
 
 # --- H1. User LaunchAgents ----------------------------------------------
 
@@ -181,7 +181,7 @@ if ! opt_out_sub cron; then
     sudo crontab -l > "$BUNDLE/manifests/root-crontab.txt" 2>/dev/null \
       && "$AUDIT" "$LANE_ID" cron ok "Wrote manifests/root-crontab.txt" \
       || "$AUDIT" "$LANE_ID" cron info "Root crontab empty or unset"
-    "$AUDIT" "$LANE_ID" cron info "/var/at/tabs is wiped on clean install — explicit capture is mandatory"
+    "$AUDIT" "$LANE_ID" cron info "/var/at/tabs is wiped on clean install -- explicit capture is mandatory"
   fi
 else
   "$AUDIT" "$LANE_ID" cron skip "Opted out via manifest"
@@ -196,7 +196,7 @@ if ! opt_out_sub login_items; then
     if osascript -e 'tell application "System Events" to get the name of every login item' \
        > "$BUNDLE/manifests/login-items.txt" 2>/dev/null; then
       "$AUDIT" "$LANE_ID" login_items ok "Wrote manifests/login-items.txt"
-      "$AUDIT" "$LANE_ID" login_items warn "List is INCOMPLETE — misses SMAppService-registered apps. Modern apps re-register on first launch."
+      "$AUDIT" "$LANE_ID" login_items warn "List is INCOMPLETE -- misses SMAppService-registered apps. Modern apps re-register on first launch."
     else
       "$AUDIT" "$LANE_ID" login_items warn "AppleScript returned non-zero (Accessibility permission may be missing)"
     fi
@@ -216,7 +216,7 @@ if ! opt_out_sub launchpad; then
         "$AUDIT" "$LANE_ID" launchpad ok "Wrote manifests/launchpad-layout.yml"
         "$AUDIT" "$LANE_ID" launchpad info "lporg archived 2025-09-19 but functional. Folder recreation has known reliability issues (issue #67)."
       else
-        "$AUDIT" "$LANE_ID" launchpad warn "lporg save failed — common, many users skip Launchpad migration entirely"
+        "$AUDIT" "$LANE_ID" launchpad warn "lporg save failed -- common, many users skip Launchpad migration entirely"
       fi
     fi
   else

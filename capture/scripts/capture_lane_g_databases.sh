@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # capture_lane_g_databases.sh
-# Lane G — Databases + Containers
+# Lane G -- Databases + Containers
 #
 # Sub-modules (each gated on tool availability):
 #   G1  Postgres - pg_dumpall (portable). See ../references/per-app/postgres.md.
 #   G2  MySQL - mysqldump --all-databases
 #   G3  Redis - copy dump.rdb
 #   G4  Mongo - mongodump
-#   G5  Docker - ~/.docker/ ONLY (Group Containers explicitly excluded — see ../references/per-app/docker.md)
+#   G5  Docker - ~/.docker/ ONLY (Group Containers explicitly excluded -- see ../references/per-app/docker.md)
 #   G6  Kubernetes - ~/.kube/config + krew plugin list
 #   G7  Helm - helm repo list
 #
@@ -38,7 +38,7 @@ LANE_ID="lane-g-databases"
 MANIFEST="$BUNDLE/manifest.json"
 
 if [ ! -f "$MANIFEST" ]; then
-  echo "capture_lane_g_databases.sh: $MANIFEST not found — run inventory first." >&2
+  echo "capture_lane_g_databases.sh: $MANIFEST not found -- run inventory first." >&2
   exit 3
 fi
 
@@ -54,11 +54,11 @@ if opt_out_lane; then
 fi
 
 if [ "$FORCE" != "1" ] && bash "$DONE_HELPER" check "$LANE_ID" >/dev/null 2>&1; then
-  "$AUDIT" "$LANE_ID" lane skip "Already done — use --force to re-capture"
+  "$AUDIT" "$LANE_ID" lane skip "Already done -- use --force to re-capture"
   exit 0
 fi
 
-"$AUDIT" "$LANE_ID" lane start "Lane G — Databases + Containers (dry_run=$DRY_RUN, force=$FORCE)"
+"$AUDIT" "$LANE_ID" lane start "Lane G -- Databases + Containers (dry_run=$DRY_RUN, force=$FORCE)"
 
 # --- G1. Postgres -------------------------------------------------------
 
@@ -73,7 +73,7 @@ if ! opt_out_sub postgres; then
         "$AUDIT" "$LANE_ID" postgres ok "Wrote databases/postgres-all.sql (~${size_mb} MB)"
         "$AUDIT" "$LANE_ID" postgres info "Restore: psql -U postgres -f postgres-all.sql. Extensions (pgvector, postgis) need brew reinstall."
       else
-        "$AUDIT" "$LANE_ID" postgres fail "pg_dumpall failed — see databases/postgres-dump.err (postgres may not be running?)"
+        "$AUDIT" "$LANE_ID" postgres fail "pg_dumpall failed -- see databases/postgres-dump.err (postgres may not be running?)"
         exit 30
       fi
     fi
@@ -96,7 +96,7 @@ if ! opt_out_sub mysql; then
         size_mb="$(du -sm "$BUNDLE/databases/mysql-all.sql" 2>/dev/null | awk '{print $1}' || echo 0)"
         "$AUDIT" "$LANE_ID" mysql ok "Wrote databases/mysql-all.sql (~${size_mb} MB)"
       else
-        "$AUDIT" "$LANE_ID" mysql fail "mysqldump failed — see databases/mysql-dump.err"
+        "$AUDIT" "$LANE_ID" mysql fail "mysqldump failed -- see databases/mysql-dump.err"
         exit 31
       fi
     fi
@@ -142,7 +142,7 @@ if ! opt_out_sub mongo; then
       if mongodump --out "$BUNDLE/databases/mongodb-dump/" >"$BUNDLE/databases/mongodb-dump.log" 2>&1; then
         "$AUDIT" "$LANE_ID" mongo ok "Wrote databases/mongodb-dump/"
       else
-        "$AUDIT" "$LANE_ID" mongo fail "mongodump failed — see databases/mongodb-dump.log"
+        "$AUDIT" "$LANE_ID" mongo fail "mongodump failed -- see databases/mongodb-dump.log"
         exit 32
       fi
     fi
@@ -153,7 +153,7 @@ else
   "$AUDIT" "$LANE_ID" mongo skip "Opted out via manifest"
 fi
 
-# --- G5. Docker (~/.docker/ ONLY — never Group Containers) ---------------
+# --- G5. Docker (~/.docker/ ONLY -- never Group Containers) ---------------
 
 if ! opt_out_sub docker; then
   if [ -d ~/.docker ]; then
@@ -192,7 +192,7 @@ if ! opt_out_sub k8s; then
       kubectl krew list > "$BUNDLE/manifests/krew-plugins.txt" 2>/dev/null \
         && "$AUDIT" "$LANE_ID" k8s ok "Wrote manifests/krew-plugins.txt" \
         || "$AUDIT" "$LANE_ID" k8s info "kubectl krew not installed or no plugins"
-      "$AUDIT" "$LANE_ID" k8s info "krew binaries are platform-specific — reinstall on new Mac, don't copy"
+      "$AUDIT" "$LANE_ID" k8s info "krew binaries are platform-specific -- reinstall on new Mac, don't copy"
     fi
   fi
 else

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # capture_lane_d_gui_configs.sh
-# Lane D — GUI app configs
+# Lane D -- GUI app configs
 #
 # Sub-modules:
 #   D1  defaults plist export per domain
 #   D2  ~/Library/Application Support selective rsync (caches excluded)
-#   D3  Stickies (Container — ACL gotcha flagged)
+#   D3  Stickies (Container -- ACL gotcha flagged)
 #   D4  Fonts (~/Library/Fonts)
-#   D5  Mail (~/Library/Mail) — rules + signatures + smart mailboxes
+#   D5  Mail (~/Library/Mail) -- rules + signatures + smart mailboxes
 #
-# Containers wholesale rsync is INTENTIONALLY NOT performed — see per-app playbooks.
+# Containers wholesale rsync is INTENTIONALLY NOT performed -- see per-app playbooks.
 #
 # Opt-out keys:
 #   opt_outs.lane_d
@@ -38,7 +38,7 @@ LANE_ID="lane-d-gui-configs"
 MANIFEST="$BUNDLE/manifest.json"
 
 if [ ! -f "$MANIFEST" ]; then
-  echo "capture_lane_d_gui_configs.sh: $MANIFEST not found — run inventory first." >&2
+  echo "capture_lane_d_gui_configs.sh: $MANIFEST not found -- run inventory first." >&2
   exit 3
 fi
 
@@ -54,11 +54,11 @@ if opt_out_lane; then
 fi
 
 if [ "$FORCE" != "1" ] && bash "$DONE_HELPER" check "$LANE_ID" >/dev/null 2>&1; then
-  "$AUDIT" "$LANE_ID" lane skip "Already done — use --force to re-capture"
+  "$AUDIT" "$LANE_ID" lane skip "Already done -- use --force to re-capture"
   exit 0
 fi
 
-"$AUDIT" "$LANE_ID" lane start "Lane D — GUI configs (dry_run=$DRY_RUN, force=$FORCE)"
+"$AUDIT" "$LANE_ID" lane start "Lane D -- GUI configs (dry_run=$DRY_RUN, force=$FORCE)"
 
 # --- D1. defaults plists -------------------------------------------------
 
@@ -114,13 +114,13 @@ if ! opt_out_sub app_support; then
     else
       "$AUDIT" "$LANE_ID" app_support warn "rsync returned non-zero (partial copy possible)"
     fi
-    "$AUDIT" "$LANE_ID" app_support info "Cloud-synced apps (1Password, Notion, Slack) — reinstall + login is faster than restore"
+    "$AUDIT" "$LANE_ID" app_support info "Cloud-synced apps (1Password, Notion, Slack) -- reinstall + login is faster than restore"
   fi
 else
   "$AUDIT" "$LANE_ID" app_support skip "Opted out via manifest"
 fi
 
-# --- D3. Stickies (Container — ACL gotcha) -------------------------------
+# --- D3. Stickies (Container -- ACL gotcha) -------------------------------
 
 if ! opt_out_sub stickies; then
   stickies_dir="$HOME/Library/Containers/com.apple.Stickies"
@@ -162,7 +162,7 @@ if ! opt_out_sub fonts; then
   else
     "$AUDIT" "$LANE_ID" fonts skip "No ~/Library/Fonts directory"
   fi
-  # System fonts (/Library/Fonts) — opt-in by default-off
+  # System fonts (/Library/Fonts) -- opt-in by default-off
   if jq -e ".opt_outs.lane_d.system_fonts == false" "$MANIFEST" >/dev/null 2>&1; then
     if [ "$DRY_RUN" != "1" ]; then
       mkdir -p "$BUNDLE/fonts-system"
@@ -186,7 +186,7 @@ if ! opt_out_sub mail; then
       "$AUDIT" "$LANE_ID" mail start "Rsync ~/Library/Mail"
       if rsync -a "$HOME/Library/Mail/" "$BUNDLE/mail/" 2>/dev/null; then
         "$AUDIT" "$LANE_ID" mail ok "Wrote mail/"
-        "$AUDIT" "$LANE_ID" mail info "V<n> dir version bumps with macOS — restore may need V8->V10 migration. See per-app/mail.md"
+        "$AUDIT" "$LANE_ID" mail info "V<n> dir version bumps with macOS -- restore may need V8->V10 migration. See per-app/mail.md"
       else
         "$AUDIT" "$LANE_ID" mail warn "Mail rsync returned non-zero (may need Full Disk Access)"
       fi

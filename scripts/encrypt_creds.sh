@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# encrypt_creds.sh — GPG seal / unseal of Lane I credentials.
+# encrypt_creds.sh -- GPG seal / unseal of Lane I credentials.
 #
 # Usage:
 #   encrypt_creds.sh seal   [--recipient KEYID] [--passphrase-file PATH] [--verbose]
@@ -25,7 +25,7 @@
 #     on APFS overwriting may not destroy old blocks (SSD garbage collection). Encrypted bundle is the real
 #     safety net; shredding is belt-and-suspenders.
 #   - If --recipient is omitted, picks the first secret key from `gpg --list-secret-keys --keyid-format LONG`.
-#     If multiple secret keys exist and --recipient is omitted, ERRORS — user must disambiguate.
+#     If multiple secret keys exist and --recipient is omitted, ERRORS -- user must disambiguate.
 #   - Verbose mode prints file count + total bytes; never prints filenames or file contents.
 #
 # Exit codes:
@@ -98,11 +98,11 @@ auto_recipient() {
   local count
   count=$(echo "$keys" | grep -c . || true)
   if [ "$count" -eq 0 ]; then
-    err "no GPG secret keys found — generate one or pass --recipient KEYID"
+    err "no GPG secret keys found -- generate one or pass --recipient KEYID"
     exit 2
   fi
   if [ "$count" -gt 1 ]; then
-    err "multiple GPG secret keys present — pass --recipient KEYID to disambiguate. Available:"
+    err "multiple GPG secret keys present -- pass --recipient KEYID to disambiguate. Available:"
     echo "$keys" | sed 's/^/  /' >&2
     exit 2
   fi
@@ -120,7 +120,7 @@ gpg_pass_args() {
 # --- Commands -------------------------------------------------------------
 
 cmd_seal() {
-  test -d "$CREDS_DIR" || { err "no credentials dir at $CREDS_DIR — nothing to seal"; exit 2; }
+  test -d "$CREDS_DIR" || { err "no credentials dir at $CREDS_DIR -- nothing to seal"; exit 2; }
 
   # Pick recipient.
   if [ -z "$RECIPIENT" ]; then
@@ -140,7 +140,7 @@ cmd_seal() {
 
   count=$(tr -cd '\0' < "$file_list" | wc -c | tr -d ' ')
   if [ "$count" -eq 0 ]; then
-    err "credentials dir is empty (or only contains the existing .gpg) — nothing to seal"
+    err "credentials dir is empty (or only contains the existing .gpg) -- nothing to seal"
     exit 2
   fi
 
@@ -206,7 +206,7 @@ cmd_unseal() {
 
   tar -xzf "$tmp_tar" -C "$OUT_DIR" || { err "tar extract failed"; rm -f "$tmp_tar"; shred_path "$OUT_DIR"; exit 1; }
 
-  # Immediately shred the intermediate plaintext tar — only the extracted tree should exist.
+  # Immediately shred the intermediate plaintext tar -- only the extracted tree should exist.
   shred_path "$tmp_tar"
   log "extracted to $OUT_DIR"
 

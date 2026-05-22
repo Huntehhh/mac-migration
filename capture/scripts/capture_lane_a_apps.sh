@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # capture_lane_a_apps.sh
-# Lane A — Applications: Brewfile, mas, orphan apps
+# Lane A -- Applications: Brewfile, mas, orphan apps
 #
 # Sub-modules:
 #   A1  Brewfile (formulae + casks + taps + mas entries via brew bundle dump)
@@ -45,7 +45,7 @@ MANIFEST="$BUNDLE/manifest.json"
 # --- guard rails ---------------------------------------------------------
 
 if [ ! -f "$MANIFEST" ]; then
-  echo "capture_lane_a_apps.sh: $MANIFEST not found — run inventory first." >&2
+  echo "capture_lane_a_apps.sh: $MANIFEST not found -- run inventory first." >&2
   exit 3
 fi
 
@@ -75,11 +75,11 @@ fi
 # --- idempotency: skip if already done unless --force --------------------
 
 if [ "$FORCE" != "1" ] && bash "$DONE_HELPER" check "$LANE_ID" >/dev/null 2>&1; then
-  "$AUDIT" "$LANE_ID" lane skip "Already done — use --force to re-capture"
+  "$AUDIT" "$LANE_ID" lane skip "Already done -- use --force to re-capture"
   exit 0
 fi
 
-"$AUDIT" "$LANE_ID" lane start "Lane A — Applications (dry_run=$DRY_RUN, force=$FORCE)"
+"$AUDIT" "$LANE_ID" lane start "Lane A -- Applications (dry_run=$DRY_RUN, force=$FORCE)"
 
 # --- A1. Brewfile --------------------------------------------------------
 

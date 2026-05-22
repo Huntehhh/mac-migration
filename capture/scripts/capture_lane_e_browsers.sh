@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # capture_lane_e_browsers.sh
-# Lane E — Browsers
+# Lane E -- Browsers
 #
 # Sub-modules:
 #   E1  Chrome - extension list only (account sync handles rest)
@@ -36,7 +36,7 @@ LANE_ID="lane-e-browsers"
 MANIFEST="$BUNDLE/manifest.json"
 
 if [ ! -f "$MANIFEST" ]; then
-  echo "capture_lane_e_browsers.sh: $MANIFEST not found — run inventory first." >&2
+  echo "capture_lane_e_browsers.sh: $MANIFEST not found -- run inventory first." >&2
   exit 3
 fi
 
@@ -52,11 +52,11 @@ if opt_out_lane; then
 fi
 
 if [ "$FORCE" != "1" ] && bash "$DONE_HELPER" check "$LANE_ID" >/dev/null 2>&1; then
-  "$AUDIT" "$LANE_ID" lane skip "Already done — use --force to re-capture"
+  "$AUDIT" "$LANE_ID" lane skip "Already done -- use --force to re-capture"
   exit 0
 fi
 
-"$AUDIT" "$LANE_ID" lane start "Lane E — Browsers (dry_run=$DRY_RUN, force=$FORCE)"
+"$AUDIT" "$LANE_ID" lane start "Lane E -- Browsers (dry_run=$DRY_RUN, force=$FORCE)"
 
 # --- E1. Chrome ---------------------------------------------------------
 
@@ -121,7 +121,7 @@ if ! opt_out_sub firefox; then
   ff_profiles="$HOME/Library/Application Support/Firefox/Profiles"
   if [ -d "$ff_profiles" ]; then
     if pgrep -x firefox >/dev/null 2>&1; then
-      "$AUDIT" "$LANE_ID" firefox warn "Firefox is RUNNING — profile copy may be inconsistent. Quit Firefox and re-run with --force."
+      "$AUDIT" "$LANE_ID" firefox warn "Firefox is RUNNING -- profile copy may be inconsistent. Quit Firefox and re-run with --force."
     fi
     if [ "$DRY_RUN" = "1" ]; then
       size_mb="$(du -sm "$ff_profiles" 2>/dev/null | awk '{print $1}' || echo 0)"
@@ -155,7 +155,7 @@ if ! opt_out_sub safari; then
         "$AUDIT" "$LANE_ID" safari ok "Wrote browsers/safari-bookmarks.plist"
         "$AUDIT" "$LANE_ID" safari info "Restore: land BEFORE first Safari launch"
       else
-        "$AUDIT" "$LANE_ID" safari warn "Safari bookmarks copy failed — needs Full Disk Access on the running shell"
+        "$AUDIT" "$LANE_ID" safari warn "Safari bookmarks copy failed -- needs Full Disk Access on the running shell"
       fi
     fi
   else

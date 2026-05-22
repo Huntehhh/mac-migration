@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tcc_deep_link.sh — open System Settings to a TCC permission panel via URL scheme.
+# tcc_deep_link.sh -- open System Settings to a TCC permission panel via URL scheme.
 #
 # Usage:
 #   tcc_deep_link.sh <panel-name>          Open the panel in System Settings.
@@ -24,7 +24,7 @@
 #   developer-tools
 #
 # Note: URL schemes are stable across macOS 13+ (Ventura+). Some panel anchors may change in future
-# major releases — verify after macOS upgrades. The base x-apple.systempreferences: scheme is documented
+# major releases -- verify after macOS upgrades. The base x-apple.systempreferences: scheme is documented
 # Apple system behavior.
 #
 # Exit codes:
@@ -96,6 +96,6 @@ esac
 # --- Open the panel -----------------------------------------------------
 url=$(lookup_url "$PANEL") || { echo "tcc_deep_link.sh: unknown panel: $PANEL (try --list)" >&2; exit 2; }
 
-command -v open >/dev/null 2>&1 || { echo "tcc_deep_link.sh: 'open' not found — not macOS?" >&2; exit 2; }
+command -v open >/dev/null 2>&1 || { echo "tcc_deep_link.sh: 'open' not found -- not macOS?" >&2; exit 2; }
 open "$url"
 echo "tcc_deep_link.sh: opened $PANEL ($url)"

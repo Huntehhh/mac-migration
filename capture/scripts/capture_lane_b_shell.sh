@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # capture_lane_b_shell.sh
-# Lane B — Shell + PATH + Custom scripts
+# Lane B -- Shell + PATH + Custom scripts
 #
 # Sub-modules:
 #   B1/B2  Dotfile refs (~/.zshrc, ~/.zprofile, ~/.zshenv, ~/.bashrc, ~/.bash_profile)
@@ -35,7 +35,7 @@ LANE_ID="lane-b-shell"
 MANIFEST="$BUNDLE/manifest.json"
 
 if [ ! -f "$MANIFEST" ]; then
-  echo "capture_lane_b_shell.sh: $MANIFEST not found — run inventory first." >&2
+  echo "capture_lane_b_shell.sh: $MANIFEST not found -- run inventory first." >&2
   exit 3
 fi
 
@@ -51,11 +51,11 @@ if opt_out_lane; then
 fi
 
 if [ "$FORCE" != "1" ] && bash "$DONE_HELPER" check "$LANE_ID" >/dev/null 2>&1; then
-  "$AUDIT" "$LANE_ID" lane skip "Already done — use --force to re-capture"
+  "$AUDIT" "$LANE_ID" lane skip "Already done -- use --force to re-capture"
   exit 0
 fi
 
-"$AUDIT" "$LANE_ID" lane start "Lane B — Shell + PATH (dry_run=$DRY_RUN, force=$FORCE)"
+"$AUDIT" "$LANE_ID" lane start "Lane B -- Shell + PATH (dry_run=$DRY_RUN, force=$FORCE)"
 
 # --- B1/B2. Dotfile refs -------------------------------------------------
 
@@ -74,7 +74,7 @@ if ! opt_out_sub dotfile_refs; then
   if [ "$DRY_RUN" = "1" ]; then
     "$AUDIT" "$LANE_ID" dotfile_refs info "Would copy $dotfile_count rc files"
   fi
-  "$AUDIT" "$LANE_ID" dotfile_refs info "path_helper reorders PATH from /etc/zprofile — review on new Mac"
+  "$AUDIT" "$LANE_ID" dotfile_refs info "path_helper reorders PATH from /etc/zprofile -- review on new Mac"
 else
   "$AUDIT" "$LANE_ID" dotfile_refs skip "Opted out via manifest"
 fi

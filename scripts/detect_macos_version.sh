@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# detect_macos_version.sh — returns the running macOS major version + codename.
+# detect_macos_version.sh -- returns the running macOS major version + codename.
 #
 # Usage:
 #   detect_macos_version.sh                  -> "26 Tahoe"
@@ -34,7 +34,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-command -v sw_vers >/dev/null 2>&1 || { echo "detect_macos_version.sh: sw_vers not found — not macOS?" >&2; exit 1; }
+command -v sw_vers >/dev/null 2>&1 || { echo "detect_macos_version.sh: sw_vers not found -- not macOS?" >&2; exit 1; }
 
 raw=$(sw_vers -productVersion 2>/dev/null) || { echo "detect_macos_version.sh: sw_vers -productVersion failed" >&2; exit 1; }
 major="${raw%%.*}"

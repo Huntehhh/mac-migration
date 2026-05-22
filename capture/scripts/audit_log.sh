@@ -41,7 +41,7 @@ mkdir -p "$BUNDLE"
 ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Escape detail for JSON: replace backslashes, double-quotes, control chars
-# BSD-flavored sed; keep it simple — strip newlines/tabs to spaces, escape quotes/backslashes
+# BSD-flavored sed; keep it simple -- strip newlines/tabs to spaces, escape quotes/backslashes
 escape_json() {
   printf '%s' "$1" \
     | tr '\n\r\t' '   ' \
@@ -58,4 +58,4 @@ line="{\"ts\":\"${ts}\",\"lane\":\"${lane_esc}\",\"action\":\"${action_esc}\",\"
 printf '%s\n' "$line" >> "$LOG_FILE"
 
 # Human-readable echo for terminal feedback
-printf '[%s] %s/%s %s — %s\n' "$ts" "$lane" "$action" "$status" "$detail"
+printf '[%s] %s/%s %s -- %s\n' "$ts" "$lane" "$action" "$status" "$detail"

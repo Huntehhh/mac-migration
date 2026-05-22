@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# smoke_test_all.sh — runs per-lane smoke tests across every captured lane.
+# smoke_test_all.sh -- runs per-lane smoke tests across every captured lane.
 #
 # Reads $BUNDLE/manifest.json, identifies which lanes were captured (.lanes.<X>.captured == true),
 # invokes the parent-level scripts/smoke_test_lane.sh for each, aggregates results.
@@ -51,7 +51,7 @@ while IFS= read -r lane; do
   detail=""
   status="pass"
 
-  # Capture stderr from smoke_test_lane.sh — that's the diagnostic on fail.
+  # Capture stderr from smoke_test_lane.sh -- that's the diagnostic on fail.
   # stdout carries the structured "lane=X test=N status=... detail=..." lines.
   out=$(BUNDLE="$BUNDLE" "$SMOKE_TEST_LANE" "$lane" 2> >(detail_var=$(cat); printf '%s' "$detail_var" >&2; echo "$detail_var" > /tmp/.smoke_stderr.$$) ) || rc=$? && rc=${rc:-0}
   stderr_text=""

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # capture_lane_f_ides.sh
-# Lane F — IDEs + Terminals
+# Lane F -- IDEs + Terminals
 #
 # Sub-modules:
 #   F1  VS Code  - extension list + settings/keybindings/snippets
@@ -40,7 +40,7 @@ LANE_ID="lane-f-ides"
 MANIFEST="$BUNDLE/manifest.json"
 
 if [ ! -f "$MANIFEST" ]; then
-  echo "capture_lane_f_ides.sh: $MANIFEST not found — run inventory first." >&2
+  echo "capture_lane_f_ides.sh: $MANIFEST not found -- run inventory first." >&2
   exit 3
 fi
 
@@ -56,11 +56,11 @@ if opt_out_lane; then
 fi
 
 if [ "$FORCE" != "1" ] && bash "$DONE_HELPER" check "$LANE_ID" >/dev/null 2>&1; then
-  "$AUDIT" "$LANE_ID" lane skip "Already done — use --force to re-capture"
+  "$AUDIT" "$LANE_ID" lane skip "Already done -- use --force to re-capture"
   exit 0
 fi
 
-"$AUDIT" "$LANE_ID" lane start "Lane F — IDEs (dry_run=$DRY_RUN, force=$FORCE)"
+"$AUDIT" "$LANE_ID" lane start "Lane F -- IDEs (dry_run=$DRY_RUN, force=$FORCE)"
 
 # helper: capture one VS Code-family editor (vscode, cursor)
 # usage: capture_vscode_family <name> <cli-cmd> <user-dir-name>
@@ -109,7 +109,7 @@ fi
 
 if ! opt_out_sub cursor; then
   capture_vscode_family cursor cursor Cursor
-  "$AUDIT" "$LANE_ID" cursor info "Cursor extension marketplace partially diverges from VS Code — some may fail to reinstall"
+  "$AUDIT" "$LANE_ID" cursor info "Cursor extension marketplace partially diverges from VS Code -- some may fail to reinstall"
 else
   "$AUDIT" "$LANE_ID" cursor skip "Opted out via manifest"
 fi
@@ -192,7 +192,7 @@ if ! opt_out_sub jetbrains; then
       mkdir -p "$BUNDLE/ides/jetbrains"
       if rsync -a "$jb/" "$BUNDLE/ides/jetbrains/" 2>/dev/null; then
         "$AUDIT" "$LANE_ID" jetbrains ok "Wrote ides/jetbrains/"
-        "$AUDIT" "$LANE_ID" jetbrains info "Configs embed absolute paths (SDK roots) — fix via File > Project Structure on new Mac"
+        "$AUDIT" "$LANE_ID" jetbrains info "Configs embed absolute paths (SDK roots) -- fix via File > Project Structure on new Mac"
       else
         "$AUDIT" "$LANE_ID" jetbrains warn "JetBrains rsync returned non-zero"
       fi

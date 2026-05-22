@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# smoke_test_lane.sh — generic per-lane smoke-test runner.
+# smoke_test_lane.sh -- generic per-lane smoke-test runner.
 #
 # Usage:
 #   smoke_test_lane.sh <lane-letter>
 #
 # Reads the canonical smoke-test catalog at:
 #   ../diff/references/per-lane-smoke-tests.md  (default; relative to this script)
-# Extracts the bash blocks under the H2 section "## Lane <letter> —" and executes each
+# Extracts the bash blocks under the H2 section "## Lane <letter> --" and executes each
 # H3 subsection's first ```bash block. Captures stderr per test as the diagnostic.
 #
 # Output (stdout, one line per test):
@@ -45,7 +45,7 @@ LANE=$(echo "$LANE" | tr '[:lower:]' '[:upper:]')
 test -f "$SMOKE_TEST_CATALOG" || { echo "smoke_test_lane.sh: catalog not found: $SMOKE_TEST_CATALOG" >&2; exit 2; }
 
 # --- Extract this lane's section ------------------------------------------
-# We slice between "## Lane <X> —" and the next H2 / H1.
+# We slice between "## Lane <X> --" and the next H2 / H1.
 # The awk pattern uses a literal anchor; we pre-compute it with shell so awk gets a fixed string.
 LANE_HEADER="## Lane $LANE"
 
@@ -59,7 +59,7 @@ section=$(awk -v hdr="$LANE_HEADER" '
 ' "$SMOKE_TEST_CATALOG")
 
 if [ -z "$section" ]; then
-  # No tests for this lane is not an error — Lane J is a checklist-only lane in the catalog,
+  # No tests for this lane is not an error -- Lane J is a checklist-only lane in the catalog,
   # and any lane the user didn't capture won't have a section either.
   printf 'lane=%s test=0 status=skip detail=no tests defined for lane\n' "$LANE"
   exit 0
