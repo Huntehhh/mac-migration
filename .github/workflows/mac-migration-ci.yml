@@ -299,7 +299,9 @@ jobs:
         env:
           BUNDLE: ${{ env.BUNDLE_DIR }}
         run: |
-          bash restore/scripts/unpack_bundle.sh
+          # unpack_bundle.sh reads INPUT from $1 (positional), not $BUNDLE env.
+          # Pass the artifact-downloaded dir as the input.
+          bash restore/scripts/unpack_bundle.sh "$BUNDLE"
           test -f "$BUNDLE/manifest.sha256" || { echo "::error::missing sha256 manifest"; exit 1; }
 
       - name: Restore Lane A — apps (idempotent re-install)
