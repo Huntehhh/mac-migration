@@ -71,7 +71,7 @@ ARCH_VAL=$(uname -m)
 USER_VAL=$(whoami)
 
 # Codename - call shared script if it exists, otherwise inline best-effort
-PARENT_SCRIPTS="$(cd "$(dirname "$0")/../../scripts" 2>/dev/null && pwd || echo "")"
+PARENT_SCRIPTS="$(cd "$(dirname "$0")/../../scripts" 2>/dev/null && pwd)"
 if [ -n "$PARENT_SCRIPTS" ] && [ -x "$PARENT_SCRIPTS/detect_macos_version.sh" ]; then
   MACOS_CODENAME=$("$PARENT_SCRIPTS/detect_macos_version.sh" --codename-only 2>/dev/null || echo "unknown")
 else
@@ -98,16 +98,16 @@ scan_lane_a() {
     brew list --cask    > "$BUNDLE/manifests/brew-casks.txt"    2>/dev/null || true
     brew tap            > "$BUNDLE/manifests/brew-taps.txt"     2>/dev/null || true
     brew leaves         > "$BUNDLE/manifests/brew-leaves.txt"   2>/dev/null || true
-    formula_count=$(wc -l < "$BUNDLE/manifests/brew-formulae.txt" 2>/dev/null | tr -d ' ' || echo 0)
-    cask_count=$(wc -l    < "$BUNDLE/manifests/brew-casks.txt"    2>/dev/null | tr -d ' ' || echo 0)
-    tap_count=$(wc -l     < "$BUNDLE/manifests/brew-taps.txt"     2>/dev/null | tr -d ' ' || echo 0)
-    formula_highlights=$(head -10 "$BUNDLE/manifests/brew-formulae.txt" 2>/dev/null | jq -R . | jq -s -c . || echo "[]")
-    cask_highlights=$(head -10 "$BUNDLE/manifests/brew-casks.txt" 2>/dev/null | jq -R . | jq -s -c . || echo "[]")
+    formula_count=$(wc -l < "$BUNDLE/manifests/brew-formulae.txt" 2>/dev/null | tr -d ' ')
+    cask_count=$(wc -l    < "$BUNDLE/manifests/brew-casks.txt"    2>/dev/null | tr -d ' ')
+    tap_count=$(wc -l     < "$BUNDLE/manifests/brew-taps.txt"     2>/dev/null | tr -d ' ')
+    formula_highlights=$(head -10 "$BUNDLE/manifests/brew-formulae.txt" 2>/dev/null | jq -R . | jq -s -c .)
+    cask_highlights=$(head -10 "$BUNDLE/manifests/brew-casks.txt" 2>/dev/null | jq -R . | jq -s -c .)
   fi
 
   if command -v mas >/dev/null 2>&1; then
     mas list > "$BUNDLE/manifests/mas-installed.txt" 2>/dev/null || true
-    mas_count=$(grep -cE '^[0-9]+' "$BUNDLE/manifests/mas-installed.txt" 2>/dev/null || echo 0)
+    mas_count=$(grep -cE '^[0-9]+' "$BUNDLE/manifests/mas-installed.txt" 2>/dev/null)
   fi
 
   # Orphan apps: system_profiler minus what's in Brewfile + mas
@@ -177,9 +177,9 @@ scan_lane_b() {
   local hosts_lines=0 sudoers_files=0
 
   if command -v chezmoi >/dev/null 2>&1; then
-    chezmoi_source=$(chezmoi source-path 2>/dev/null || echo "")
+    chezmoi_source=$(chezmoi source-path 2>/dev/null)
     if [ -n "$chezmoi_source" ] && [ -d "$chezmoi_source" ]; then
-      chezmoi_unpushed=$(cd "$chezmoi_source" && git log '@{u}..' --oneline 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+      chezmoi_unpushed=$(cd "$chezmoi_source" && git log '@{u}..' --oneline 2>/dev/null | wc -l | tr -d ' ')
     fi
   fi
 
@@ -187,12 +187,12 @@ scan_lane_b() {
     [ -f "$f" ] && dotfiles_count=$((dotfiles_count + 1))
   done
 
-  paths_d_count=$(ls /etc/paths.d 2>/dev/null | wc -l | tr -d ' ' || echo 0)
-  [ -d "$HOME/bin" ] && bin_count=$(find "$HOME/bin" -maxdepth 1 -type f -perm +111 2>/dev/null | wc -l | tr -d ' ' || echo 0)
-  [ -d "$HOME/.local/bin" ] && local_bin_count=$(find "$HOME/.local/bin" -maxdepth 1 -type f -perm +111 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+  paths_d_count=$(ls /etc/paths.d 2>/dev/null | wc -l | tr -d ' ')
+  [ -d "$HOME/bin" ] && bin_count=$(find "$HOME/bin" -maxdepth 1 -type f -perm +111 2>/dev/null | wc -l | tr -d ' ')
+  [ -d "$HOME/.local/bin" ] && local_bin_count=$(find "$HOME/.local/bin" -maxdepth 1 -type f -perm +111 2>/dev/null | wc -l | tr -d ' ')
 
-  hosts_lines=$(grep -cvE '^(#|$)' /etc/hosts 2>/dev/null || echo 0)
-  sudoers_files=$(ls /etc/sudoers.d 2>/dev/null | grep -v README | wc -l | tr -d ' ' || echo 0)
+  hosts_lines=$(grep -cvE '^(#|$)' /etc/hosts 2>/dev/null)
+  sudoers_files=$(ls /etc/sudoers.d 2>/dev/null | grep -v README | wc -l | tr -d ' ')
 
   log_lane "B" "scan" "ok" "chezmoi:$chezmoi_unpushed unpushed, dotfiles:$dotfiles_count, paths.d:$paths_d_count, bin:$bin_count, local/bin:$local_bin_count"
 
@@ -229,40 +229,40 @@ scan_lane_c() {
 
   [ -f "$HOME/.tool-versions" ] && cp "$HOME/.tool-versions" "$BUNDLE/manifests/.tool-versions"
   [ -f "$HOME/.config/mise/config.toml" ] && cp "$HOME/.config/mise/config.toml" "$BUNDLE/manifests/mise-config.toml"
-  mise_tools=$(grep -cvE '^(#|$)' "$HOME/.tool-versions" 2>/dev/null || echo 0)
+  mise_tools=$(grep -cvE '^(#|$)' "$HOME/.tool-versions" 2>/dev/null)
 
   if command -v pipx >/dev/null 2>&1; then
     pipx list --json > "$BUNDLE/manifests/pipx.json" 2>/dev/null || echo '{}' > "$BUNDLE/manifests/pipx.json"
-    pipx_count=$(jq '.venvs | length' "$BUNDLE/manifests/pipx.json" 2>/dev/null || echo 0)
+    pipx_count=$(jq '.venvs | length' "$BUNDLE/manifests/pipx.json" 2>/dev/null)
   fi
 
   if command -v npm >/dev/null 2>&1; then
     npm list -g --depth=0 --json > "$BUNDLE/manifests/npm-globals.json" 2>/dev/null || echo '{}' > "$BUNDLE/manifests/npm-globals.json"
-    npm_count=$(jq '.dependencies | length // 0' "$BUNDLE/manifests/npm-globals.json" 2>/dev/null || echo 0)
+    npm_count=$(jq '.dependencies | length // 0' "$BUNDLE/manifests/npm-globals.json" 2>/dev/null)
   fi
 
   if command -v cargo >/dev/null 2>&1; then
     cargo install --list > "$BUNDLE/manifests/cargo-installs.txt" 2>/dev/null || true
-    cargo_count=$(grep -cE '^[a-z0-9_-]+ v' "$BUNDLE/manifests/cargo-installs.txt" 2>/dev/null || echo 0)
+    cargo_count=$(grep -cE '^[a-z0-9_-]+ v' "$BUNDLE/manifests/cargo-installs.txt" 2>/dev/null)
   fi
 
   if command -v gem >/dev/null 2>&1; then
     gem list > "$BUNDLE/manifests/gem-list.txt" 2>/dev/null || true
-    gem_count=$(wc -l < "$BUNDLE/manifests/gem-list.txt" 2>/dev/null | tr -d ' ' || echo 0)
+    gem_count=$(wc -l < "$BUNDLE/manifests/gem-list.txt" 2>/dev/null | tr -d ' ')
   fi
 
   if command -v go >/dev/null 2>&1; then
     local gopath
-    gopath=$(go env GOPATH 2>/dev/null || echo "")
+    gopath=$(go env GOPATH 2>/dev/null)
     if [ -n "$gopath" ] && [ -d "$gopath/bin" ]; then
       ls -1 "$gopath/bin" > "$BUNDLE/manifests/go-bin.txt" 2>/dev/null || true
-      go_count=$(wc -l < "$BUNDLE/manifests/go-bin.txt" 2>/dev/null | tr -d ' ' || echo 0)
+      go_count=$(wc -l < "$BUNDLE/manifests/go-bin.txt" 2>/dev/null | tr -d ' ')
     fi
   fi
 
   if command -v composer >/dev/null 2>&1; then
     composer global show --format=json > "$BUNDLE/manifests/composer-globals.json" 2>/dev/null || echo '{}' > "$BUNDLE/manifests/composer-globals.json"
-    composer_count=$(jq '.installed | length // 0' "$BUNDLE/manifests/composer-globals.json" 2>/dev/null || echo 0)
+    composer_count=$(jq '.installed | length // 0' "$BUNDLE/manifests/composer-globals.json" 2>/dev/null)
   fi
 
   log_lane "C" "scan" "ok" "mise:$mise_tools pipx:$pipx_count npm:$npm_count cargo:$cargo_count gem:$gem_count go:$go_count composer:$composer_count"
@@ -298,19 +298,19 @@ scan_lane_d() {
   local defaults_count=0 appsupport_count=0 containers_count=0 group_containers_count=0
   local user_fonts=0 system_fonts=0 stickies_count=0 mail_rules_present=false
 
-  defaults_count=$(defaults domains 2>/dev/null | tr ',' '\n' | grep -cvE '^\s*$' || echo 0)
-  appsupport_count=$(ls -1 "$HOME/Library/Application Support" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
-  containers_count=$(ls -1 "$HOME/Library/Containers" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
-  group_containers_count=$(ls -1 "$HOME/Library/Group Containers" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
-  user_fonts=$(ls -1 "$HOME/Library/Fonts" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
-  system_fonts=$(ls -1 /Library/Fonts 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+  defaults_count=$(defaults domains 2>/dev/null | tr ',' '\n' | grep -cvE '^\s*$')
+  appsupport_count=$(ls -1 "$HOME/Library/Application Support" 2>/dev/null | wc -l | tr -d ' ')
+  containers_count=$(ls -1 "$HOME/Library/Containers" 2>/dev/null | wc -l | tr -d ' ')
+  group_containers_count=$(ls -1 "$HOME/Library/Group Containers" 2>/dev/null | wc -l | tr -d ' ')
+  user_fonts=$(ls -1 "$HOME/Library/Fonts" 2>/dev/null | wc -l | tr -d ' ')
+  system_fonts=$(ls -1 /Library/Fonts 2>/dev/null | wc -l | tr -d ' ')
 
   if [ -d "$HOME/Library/Containers/com.apple.Stickies/Data/Library/Stickies" ]; then
-    stickies_count=$(ls -1 "$HOME/Library/Containers/com.apple.Stickies/Data/Library/Stickies" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+    stickies_count=$(ls -1 "$HOME/Library/Containers/com.apple.Stickies/Data/Library/Stickies" 2>/dev/null | wc -l | tr -d ' ')
   fi
 
   local mail_v_dir
-  mail_v_dir=$(ls -d "$HOME"/Library/Mail/V* 2>/dev/null | head -1 || echo "")
+  mail_v_dir=$(ls -d "$HOME"/Library/Mail/V* 2>/dev/null | head -1)
   if [ -n "$mail_v_dir" ] && [ -f "$mail_v_dir/MailData/SyncedRules.plist" ]; then
     mail_rules_present=true
   fi
@@ -362,7 +362,7 @@ scan_lane_e() {
   fi
 
   local chrome_ext_dir="$HOME/Library/Application Support/Google/Chrome/Default/Extensions"
-  [ -d "$chrome_ext_dir" ] && chrome_ext_count=$(ls -1 "$chrome_ext_dir" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+  [ -d "$chrome_ext_dir" ] && chrome_ext_count=$(ls -1 "$chrome_ext_dir" 2>/dev/null | wc -l | tr -d ' ')
 
   log_lane "E" "scan" "ok" "browsers:${#browsers[@]} chrome_ext:$chrome_ext_count"
 
@@ -387,10 +387,10 @@ scan_lane_f() {
   local vscode_count=0 cursor_count=0 zed_present=false jetbrains_dirs=0
   local iterm2_present=false warp_present=false ghostty_present=false alacritty_present=false kitty_present=false
 
-  command -v code >/dev/null 2>&1 && vscode_count=$(code --list-extensions 2>/dev/null | wc -l | tr -d ' ' || echo 0)
-  command -v cursor >/dev/null 2>&1 && cursor_count=$(cursor --list-extensions 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+  command -v code >/dev/null 2>&1 && vscode_count=$(code --list-extensions 2>/dev/null | wc -l | tr -d ' ')
+  command -v cursor >/dev/null 2>&1 && cursor_count=$(cursor --list-extensions 2>/dev/null | wc -l | tr -d ' ')
   [ -f "$HOME/.config/zed/settings.json" ] && zed_present=true
-  [ -d "$HOME/Library/Application Support/JetBrains" ] && jetbrains_dirs=$(ls -1 "$HOME/Library/Application Support/JetBrains" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+  [ -d "$HOME/Library/Application Support/JetBrains" ] && jetbrains_dirs=$(ls -1 "$HOME/Library/Application Support/JetBrains" 2>/dev/null | wc -l | tr -d ' ')
   [ -f "$HOME/Library/Preferences/com.googlecode.iterm2.plist" ] && iterm2_present=true
   [ -d "$HOME/Library/Application Support/dev.warp.Warp-Stable" ] && warp_present=true
   [ -f "$HOME/.config/ghostty/config" ] && ghostty_present=true
@@ -436,12 +436,12 @@ scan_lane_g() {
   local docker_contexts=0 kube_present=false krew_count=0 helm_repos=0
 
   if command -v psql >/dev/null 2>&1; then
-    pg_version=$(psql --version 2>/dev/null | awk '{print $3}' || echo "")
-    pg_dbs=$(psql -U "$(whoami)" -tAc "SELECT count(*) FROM pg_database WHERE datistemplate=false;" 2>/dev/null | tr -d ' ' || echo 0)
+    pg_version=$(psql --version 2>/dev/null | awk '{print $3}')
+    pg_dbs=$(psql -U "$(whoami)" -tAc "SELECT count(*) FROM pg_database WHERE datistemplate=false;" 2>/dev/null | tr -d ' ')
     for d in /opt/homebrew/var/postgresql@*; do
       if [ -d "$d" ]; then
         local sz
-        sz=$(du -sk "$d" 2>/dev/null | awk '{print $1*1024}' || echo 0)
+        sz=$(du -sk "$d" 2>/dev/null | awk '{print $1*1024}')
         pg_size_bytes=$((pg_size_bytes + sz))
       fi
     done
@@ -450,10 +450,10 @@ scan_lane_g() {
   command -v mysql >/dev/null 2>&1 && mysql_present=true
   [ -f /opt/homebrew/var/db/redis/dump.rdb ] && redis_present=true
   command -v mongosh >/dev/null 2>&1 && mongo_present=true
-  [ -d "$HOME/.docker/contexts/meta" ] && docker_contexts=$(ls -1 "$HOME/.docker/contexts/meta" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+  [ -d "$HOME/.docker/contexts/meta" ] && docker_contexts=$(ls -1 "$HOME/.docker/contexts/meta" 2>/dev/null | wc -l | tr -d ' ')
   [ -f "$HOME/.kube/config" ] && kube_present=true
-  command -v kubectl >/dev/null 2>&1 && krew_count=$(kubectl krew list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ' || echo 0)
-  command -v helm >/dev/null 2>&1 && helm_repos=$(helm repo list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ' || echo 0)
+  command -v kubectl >/dev/null 2>&1 && krew_count=$(kubectl krew list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')
+  command -v helm >/dev/null 2>&1 && helm_repos=$(helm repo list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')
 
   log_lane "G" "scan" "ok" "pg:$pg_dbs mysql:$mysql_present redis:$redis_present mongo:$mongo_present docker:$docker_contexts kube:$kube_present"
 
@@ -491,24 +491,24 @@ scan_lane_h() {
   local user_launchagents=0 system_launchagents=0 system_launchdaemons=0
   local brew_services_running=0 pm2_processes=0 cron_lines=0 login_items=0
 
-  user_launchagents=$(ls -1 "$HOME/Library/LaunchAgents" 2>/dev/null | grep -c '\.plist$' || echo 0)
-  system_launchagents=$(ls -1 /Library/LaunchAgents 2>/dev/null | grep -c '\.plist$' || echo 0)
-  system_launchdaemons=$(ls -1 /Library/LaunchDaemons 2>/dev/null | grep -c '\.plist$' || echo 0)
+  user_launchagents=$(ls -1 "$HOME/Library/LaunchAgents" 2>/dev/null | grep -c '\.plist$')
+  system_launchagents=$(ls -1 /Library/LaunchAgents 2>/dev/null | grep -c '\.plist$')
+  system_launchdaemons=$(ls -1 /Library/LaunchDaemons 2>/dev/null | grep -c '\.plist$')
 
   if command -v brew >/dev/null 2>&1; then
     brew services list > "$BUNDLE/manifests/brew-services-running.txt" 2>/dev/null || true
-    brew_services_running=$(awk '$2=="started"' "$BUNDLE/manifests/brew-services-running.txt" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+    brew_services_running=$(awk '$2=="started"' "$BUNDLE/manifests/brew-services-running.txt" 2>/dev/null | wc -l | tr -d ' ')
   fi
 
   if command -v pm2 >/dev/null 2>&1; then
-    pm2_processes=$(pm2 jlist 2>/dev/null | jq 'length // 0' 2>/dev/null || echo 0)
+    pm2_processes=$(pm2 jlist 2>/dev/null | jq 'length // 0' 2>/dev/null)
   fi
 
   crontab -l > "$BUNDLE/manifests/user-crontab.txt" 2>/dev/null || echo "" > "$BUNDLE/manifests/user-crontab.txt"
-  cron_lines=$(grep -cvE '^(#|$)' "$BUNDLE/manifests/user-crontab.txt" 2>/dev/null || echo 0)
+  cron_lines=$(grep -cvE '^(#|$)' "$BUNDLE/manifests/user-crontab.txt" 2>/dev/null)
 
   # Login Items via AppleScript (incomplete by design - SMAppService apps invisible)
-  login_items=$(osascript -e 'tell application "System Events" to get the name of every login item' 2>/dev/null | tr ',' '\n' | grep -cvE '^\s*$' || echo 0)
+  login_items=$(osascript -e 'tell application "System Events" to get the name of every login item' 2>/dev/null | tr ',' '\n' | grep -cvE '^\s*$')
 
   log_lane "H" "scan" "ok" "user_LA:$user_launchagents sys_LA:$system_launchagents sys_LD:$system_launchdaemons brew_running:$brew_services_running pm2:$pm2_processes cron:$cron_lines login_items:$login_items"
 
@@ -547,7 +547,7 @@ scan_lane_i() {
 
   [ -f "$HOME/.gitconfig" ] && git_config_present=true
   [ -f "$HOME/.config/gh/hosts.yml" ] && gh_hosts_present=true
-  [ -f "$HOME/.aws/credentials" ] && aws_profiles=$(grep -c '^\[' "$HOME/.aws/credentials" 2>/dev/null || echo 0)
+  [ -f "$HOME/.aws/credentials" ] && aws_profiles=$(grep -c '^\[' "$HOME/.aws/credentials" 2>/dev/null)
   [ -d "$HOME/.config/gcloud" ] && gcloud_present=true
   [ -d "$HOME/.azure" ] && azure_present=true
   [ -d "$HOME/.cloudflared" ] && cloudflared_present=true
@@ -558,15 +558,15 @@ scan_lane_i() {
   done
 
   if [ -d "$HOME/.ssh" ]; then
-    ssh_keys=$(find "$HOME/.ssh" -maxdepth 1 -name 'id_*' ! -name '*.pub' 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+    ssh_keys=$(find "$HOME/.ssh" -maxdepth 1 -name 'id_*' ! -name '*.pub' 2>/dev/null | wc -l | tr -d ' ')
   fi
 
   if command -v gpg >/dev/null 2>&1; then
-    gpg_secret_keys=$(gpg --list-secret-keys --with-colons 2>/dev/null | grep -c '^sec:' || echo 0)
+    gpg_secret_keys=$(gpg --list-secret-keys --with-colons 2>/dev/null | grep -c '^sec:')
   fi
 
   local wg_dir="$HOME/Library/Group Containers/group.com.wireguard.macos/Library/Application Support/WireGuard"
-  [ -d "$wg_dir" ] && wg_tunnels=$(ls -1 "$wg_dir" 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+  [ -d "$wg_dir" ] && wg_tunnels=$(ls -1 "$wg_dir" 2>/dev/null | wc -l | tr -d ' ')
 
   log_lane "I" "scan" "ok" "git:$git_config_present gh:$gh_hosts_present aws:$aws_profiles gcloud:$gcloud_present ssh_keys:$ssh_keys gpg:$gpg_secret_keys wg:$wg_tunnels"
 
@@ -610,7 +610,7 @@ scan_lane_j() {
   local tcc_db="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
   if [ -f "$tcc_db" ] && sqlite3 "$tcc_db" ".tables" >/dev/null 2>&1; then
     tcc_accessible=true
-    tcc_grant_count=$(sqlite3 "$tcc_db" "SELECT count(*) FROM access;" 2>/dev/null || echo 0)
+    tcc_grant_count=$(sqlite3 "$tcc_db" "SELECT count(*) FROM access;" 2>/dev/null)
   fi
 
   log_lane "J" "scan" "ok" "tcc_accessible:$tcc_accessible grants:$tcc_grant_count"
