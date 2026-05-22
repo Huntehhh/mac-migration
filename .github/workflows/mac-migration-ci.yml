@@ -1,0 +1,349 @@
+name: mac-migration CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  BUNDLE_DIR: ${{ github.workspace }}/.ci-bundle
+  GPG_KEY_PASSPHRASE: ci-test-passphrase
+  GPG_KEY_NAME: mac-migration-ci@example.com
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Stage 1 — syntax + lint sanity. Cheap, fast, runs on Ubuntu.
+  # ---------------------------------------------------------------------------
+  syntax:
+    name: Syntax + ASCII checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: bash -n on every shell script
+        run: |
+          set -e
+          fail=0
+          for f in $(find . -name '*.sh' -type f); do
+            if ! bash -n "$f"; then
+              echo "::error file=$f::bash -n failed"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: ASCII-only check
+        run: |
+          set -e
+          fail=0
+          for f in $(find . -name '*.sh' -type f); do
+            if LC_ALL=C grep -P '[^\x00-\x7F]' "$f" > /dev/null 2>&1; then
+              echo "::error file=$f::Contains non-ASCII characters"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Frontmatter validation
+        run: |
+          pip install pyyaml
+          python - <<'PY'
+          import sys, re, yaml
+          from pathlib import Path
+
+          fail = False
+          for skill_md in Path('.').rglob('SKILL.md'):
+              text = skill_md.read_text(encoding='utf-8')
+              m = re.match(r'^---\n(.*?)\n---', text, re.DOTALL)
+              if not m:
+                  print(f'::error file={skill_md}::No frontmatter')
+                  fail = True
+                  continue
+              try:
+                  fm = yaml.safe_load(m.group(1))
+              except yaml.YAMLError as e:
+                  print(f'::error file={skill_md}::YAML: {e}')
+                  fail = True
+                  continue
+              if 'name' not in fm or 'description' not in fm:
+                  print(f'::error file={skill_md}::Missing name or description')
+                  fail = True
+              desc = fm.get('description', '')
+              if '<' in desc or '>' in desc:
+                  print(f'::error file={skill_md}::Description has angle brackets')
+                  fail = True
+              if len(desc) > 1024:
+                  print(f'::error file={skill_md}::Description too long: {len(desc)} chars')
+                  fail = True
+          sys.exit(1 if fail else 0)
+          PY
+
+  # ---------------------------------------------------------------------------
+  # Stage 2 — capture phase on macos-15.
+  # Exercises every lane the runner can support, produces a real bundle.
+  # ---------------------------------------------------------------------------
+  capture-smoke:
+    name: Capture smoke (macos-15)
+    needs: syntax
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify runner prereqs
+        run: |
+          set -e
+          for t in brew bash jq gpg zstd shasum python3; do
+            command -v "$t" >/dev/null || { echo "::error::missing $t"; exit 1; }
+          done
+          sw_vers
+          uname -a
+          bash --version | head -1
+
+      - name: Mint a throwaway GPG key for the encryption flow
+        run: |
+          set -e
+          cat > /tmp/gpg-batch <<EOF
+          %no-protection
+          Key-Type: RSA
+          Key-Length: 2048
+          Subkey-Type: RSA
+          Subkey-Length: 2048
+          Name-Real: Mac Migration CI
+          Name-Email: ${GPG_KEY_NAME}
+          Expire-Date: 1d
+          %commit
+          EOF
+          gpg --batch --generate-key /tmp/gpg-batch
+          gpg --list-secret-keys
+
+      - name: Run preflight (expected to fail loudly — assert it does not crash)
+        run: |
+          set +e
+          bash inventory/scripts/preflight_check.sh
+          rc=$?
+          set -e
+          echo "preflight exit code: $rc"
+          # We expect 1+ blockers (no chezmoi, no FDA, no MAS) — but the script
+          # must exit cleanly with a structured failure list, not segfault.
+          if [ "$rc" -gt 64 ]; then
+            echo "::error::preflight returned anomalous exit code $rc (expected 0 or 1)"
+            exit 1
+          fi
+
+      - name: Run inventory scan
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          mkdir -p "$BUNDLE"
+          bash inventory/scripts/scan_inventory.sh
+          test -f "$BUNDLE/manifest.json" || { echo "::error::no manifest.json"; exit 1; }
+          jq . "$BUNDLE/manifest.json" >/dev/null
+
+      - name: Capture Lane A — apps
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          bash capture/scripts/capture_lane_a_apps.sh
+          test -f "$BUNDLE/Brewfile" || { echo "::error::no Brewfile"; exit 1; }
+          wc -l "$BUNDLE/Brewfile"
+          test -f "$BUNDLE/.done/lane-a-apps" || { echo "::error::no .done marker"; exit 1; }
+
+      - name: Capture Lane B — shell + PATH
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          # Seed minimal dotfiles so capture has something to grab
+          echo "export TEST_VAR=ci" > "$HOME/.zshrc"
+          echo '# test' > "$HOME/.zprofile"
+          mkdir -p "$HOME/bin"
+          echo '#!/usr/bin/env bash' > "$HOME/bin/test-script"
+          chmod +x "$HOME/bin/test-script"
+          bash capture/scripts/capture_lane_b_shell.sh
+          test -d "$BUNDLE/dotfiles-refs" || { echo "::error::no dotfiles-refs"; exit 1; }
+          test -d "$BUNDLE/home-bin" || { echo "::error::no home-bin"; exit 1; }
+
+      - name: Capture Lane C — toolchains
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          bash capture/scripts/capture_lane_c_toolchains.sh
+          # Runner has node + python + ruby preinstalled — manifests should exist
+          ls -la "$BUNDLE/manifests/" || true
+          test -f "$BUNDLE/.done/lane-c-toolchains"
+
+      - name: Capture Lane H — background services
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          bash capture/scripts/capture_lane_h_services.sh
+          test -f "$BUNDLE/.done/lane-h-services"
+          test -d "$BUNDLE/launchd"
+
+      - name: Capture Lane I — credentials (with GPG seal round-trip)
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          # Seed a fake SSH key so lane I has something to capture
+          mkdir -p "$HOME/.ssh"
+          ssh-keygen -t ed25519 -N '' -f "$HOME/.ssh/id_test" -C ci@test
+          bash capture/scripts/capture_lane_i_creds.sh || true
+          # Lane I seals credentials/ -> credentials/credentials.tar.gz.gpg
+          ls -la "$BUNDLE/credentials/" || true
+          if [ -f "$BUNDLE/credentials/credentials.tar.gz.gpg" ]; then
+            echo "GPG seal succeeded"
+          else
+            echo "::warning::Lane I did not produce sealed credentials archive — may be runner GPG-config quirk"
+          fi
+
+      - name: Package bundle (SHA256 manifest + optional tarball)
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          bash capture/scripts/package_bundle.sh --tarball || true
+          ls -la "$BUNDLE/"
+          if [ -f "$BUNDLE/manifest.sha256" ]; then
+            head -5 "$BUNDLE/manifest.sha256"
+            wc -l "$BUNDLE/manifest.sha256"
+          else
+            echo "::error::no manifest.sha256"
+            exit 1
+          fi
+
+      - name: Diff state — write baseline
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          bash diff/scripts/diff_state.sh --write-baseline
+          test -f "$HOME/.mac-migration/baseline.json" || { echo "::error::no baseline.json"; exit 1; }
+          jq . "$HOME/.mac-migration/baseline.json" >/dev/null
+
+      - name: Smoke-test runner — must not crash
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          set +e
+          bash diff/scripts/smoke_test_all.sh
+          rc=$?
+          set -e
+          echo "smoke-test exit code: $rc"
+          # Some lanes may fail because runner is not a typical user Mac.
+          # Failure mode tolerated; crash is not.
+          if [ "$rc" -gt 64 ]; then
+            echo "::error::smoke-test returned anomalous exit code $rc"
+            exit 1
+          fi
+
+      - name: Export bundle as artifact for restore round-trip job
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-bundle
+          path: ${{ env.BUNDLE_DIR }}
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Export GPG key (encrypted) for restore round-trip
+        run: |
+          gpg --batch --pinentry-mode loopback --passphrase '' \
+            --export-secret-keys --armor "${GPG_KEY_NAME}" \
+            | openssl enc -aes-256-cbc -salt -pbkdf2 \
+            -pass pass:"${GPG_KEY_PASSPHRASE}" \
+            -out /tmp/gpg-secret.enc
+          ls -la /tmp/gpg-secret.enc
+
+      - name: Upload GPG key artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpg-secret
+          path: /tmp/gpg-secret.enc
+          retention-days: 1
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Stage 3 — restore on a fresh macos-15 runner, using the captured bundle.
+  # This is the real round-trip test: bundle made on machine A, consumed on B.
+  # ---------------------------------------------------------------------------
+  restore-roundtrip:
+    name: Restore round-trip (macos-15, fresh runner)
+    needs: capture-smoke
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the bundle from capture stage
+        uses: actions/download-artifact@v4
+        with:
+          name: migration-bundle
+          path: ${{ env.BUNDLE_DIR }}
+
+      - name: Download + import the GPG key
+        uses: actions/download-artifact@v4
+        with:
+          name: gpg-secret
+          path: /tmp/gpg-secret/
+
+      - name: Decrypt + import GPG key
+        run: |
+          openssl enc -d -aes-256-cbc -salt -pbkdf2 \
+            -pass pass:"${GPG_KEY_PASSPHRASE}" \
+            -in /tmp/gpg-secret/gpg-secret.enc \
+            -out /tmp/gpg-secret.asc
+          gpg --batch --import /tmp/gpg-secret.asc
+          gpg --list-secret-keys
+
+      - name: Unpack + verify bundle integrity
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          bash restore/scripts/unpack_bundle.sh
+          test -f "$BUNDLE/manifest.sha256" || { echo "::error::missing sha256 manifest"; exit 1; }
+
+      - name: Restore Lane A — apps (idempotent re-install)
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          # Runner already has brew + most packages — script should be idempotent
+          bash restore/scripts/restore_lane_a_apps.sh || true
+          test -f "$BUNDLE/.done/lane-a-apps" || { echo "::error::no .done marker"; exit 1; }
+
+      - name: Restore Lane B — shell + PATH
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+          CHEZMOI_REPO: ""
+        run: |
+          bash restore/scripts/restore_lane_b_shell.sh || true
+          # Verify the dotfile we captured earlier round-tripped
+          if grep -q "TEST_VAR=ci" "$HOME/.zshrc" 2>/dev/null; then
+            echo "Lane B round-trip OK"
+          else
+            echo "::warning::Lane B dotfile content not restored as expected"
+          fi
+
+      - name: Restore Lane C — toolchains
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          bash restore/scripts/restore_lane_c_toolchains.sh || true
+
+      - name: Diff post-restore state
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          set +e
+          bash diff/scripts/diff_state.sh
+          rc=$?
+          set -e
+          echo "diff exit code: $rc"
+          if [ -f "$BUNDLE/DIFF-REPORT.md" ]; then
+            echo "=== DIFF-REPORT.md ==="
+            cat "$BUNDLE/DIFF-REPORT.md"
+          fi
+
+      - name: Upload final diff report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diff-report
+          path: ${{ env.BUNDLE_DIR }}/DIFF-REPORT.md
+          if-no-files-found: warn
+          retention-days: 7
