@@ -67,7 +67,7 @@ if opt_out_lane; then
   "$AUDIT" "$LANE_ID" lane skip "manifest.json opts out of entire Lane A"
   # honor opt-out by writing done marker so subsequent runs skip cleanly
   if [ "$DRY_RUN" != "1" ]; then
-    bash "$DONE_HELPER" write "$LANE_ID"
+    bash "$DONE_HELPER" set "$LANE_ID"
   fi
   exit 0
 fi
@@ -182,6 +182,6 @@ fi
 if [ "$DRY_RUN" = "1" ]; then
   "$AUDIT" "$LANE_ID" lane info "Dry-run complete; no .done marker written"
 else
-  bash "$DONE_HELPER" write "$LANE_ID"
+  bash "$DONE_HELPER" set "$LANE_ID"
   "$AUDIT" "$LANE_ID" lane ok "Lane A capture complete"
 fi

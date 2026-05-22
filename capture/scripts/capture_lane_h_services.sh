@@ -50,7 +50,7 @@ opt_out_sub()  { jq -e ".opt_outs.lane_h.$1 == true" "$MANIFEST" >/dev/null 2>&1
 
 if opt_out_lane; then
   "$AUDIT" "$LANE_ID" lane skip "manifest.json opts out of entire Lane H"
-  [ "$DRY_RUN" != "1" ] && bash "$DONE_HELPER" write "$LANE_ID"
+  [ "$DRY_RUN" != "1" ] && bash "$DONE_HELPER" set "$LANE_ID"
   exit 0
 fi
 
@@ -231,6 +231,6 @@ fi
 if [ "$DRY_RUN" = "1" ]; then
   "$AUDIT" "$LANE_ID" lane info "Dry-run complete; no .done marker written"
 else
-  bash "$DONE_HELPER" write "$LANE_ID"
+  bash "$DONE_HELPER" set "$LANE_ID"
   "$AUDIT" "$LANE_ID" lane ok "Lane H capture complete"
 fi
