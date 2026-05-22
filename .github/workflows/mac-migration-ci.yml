@@ -244,6 +244,7 @@ jobs:
           path: ${{ env.BUNDLE_DIR }}
           retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Export GPG key (encrypted) for restore round-trip
         run: |
