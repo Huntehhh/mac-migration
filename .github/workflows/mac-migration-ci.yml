@@ -314,7 +314,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: migration-bundle
-          path: ${{ env.BUNDLE_DIR }}
+          # Exclude AppSupport + Containers: the restore round-trip only consumes
+          # lanes A/B/C/G, and these dirs contain macOS filenames with ':' (legal on
+          # APFS, rejected by GitHub artifact upload). On a real Mac->Mac transfer
+          # (USB/AirDrop/tar) colons are fine; this exclusion is CI-artifact-only.
+          path: |
+            ${{ env.BUNDLE_DIR }}
+            !${{ env.BUNDLE_DIR }}/AppSupport/**
+            !${{ env.BUNDLE_DIR }}/Containers/**
           retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
