@@ -68,12 +68,24 @@ if ! opt_out_sub postgres; then
       "$AUDIT" "$LANE_ID" postgres info "Would run pg_dumpall (portable mode). Cross-major: see per-app/postgres.md"
     else
       "$AUDIT" "$LANE_ID" postgres start "Running pg_dumpall (portable mode)"
-      if pg_dumpall -U postgres > "$BUNDLE/databases/postgres-all.sql" 2>"$BUNDLE/databases/postgres-dump.err"; then
+      # Detect the superuser: Homebrew Postgres uses the OS username, NOT "postgres".
+      # Most power-user Macs have no "postgres" role at all. Try both.
+      pg_superuser=""
+      for cand in postgres "$(whoami)"; do
+        if psql -U "$cand" -d postgres -c '\q' 2>/dev/null || psql -U "$cand" -c '\q' 2>/dev/null; then
+          pg_superuser="$cand"; break
+        fi
+      done
+      if [ -z "$pg_superuser" ]; then
+        # Server not reachable (likely stopped). Skip rather than hard-fail the whole capture.
+        "$AUDIT" "$LANE_ID" postgres skip "Postgres installed but not reachable as 'postgres' or '$(whoami)' -- server may be stopped; skipping dump"
+      elif pg_dumpall -U "$pg_superuser" > "$BUNDLE/databases/postgres-all.sql" 2>"$BUNDLE/databases/postgres-dump.err"; then
         size_mb="$(du -sm "$BUNDLE/databases/postgres-all.sql" 2>/dev/null | awk '{print $1}' || echo 0)"
-        "$AUDIT" "$LANE_ID" postgres ok "Wrote databases/postgres-all.sql (~${size_mb} MB)"
-        "$AUDIT" "$LANE_ID" postgres info "Restore: psql -U postgres -f postgres-all.sql. Extensions (pgvector, postgis) need brew reinstall."
+        printf '%s\n' "$pg_superuser" > "$BUNDLE/databases/postgres-superuser.txt"
+        "$AUDIT" "$LANE_ID" postgres ok "Wrote databases/postgres-all.sql (~${size_mb} MB) as superuser '$pg_superuser'"
+        "$AUDIT" "$LANE_ID" postgres info "Restore reuses detected superuser. Extensions (pgvector, postgis) need brew reinstall."
       else
-        "$AUDIT" "$LANE_ID" postgres fail "pg_dumpall failed -- see databases/postgres-dump.err (postgres may not be running?)"
+        "$AUDIT" "$LANE_ID" postgres fail "pg_dumpall failed -- see databases/postgres-dump.err"
         exit 30
       fi
     fi

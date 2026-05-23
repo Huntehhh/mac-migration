@@ -40,14 +40,28 @@ if [ -f "$BUNDLE/databases/postgres-all.sql" ]; then
   brew services start "postgresql@$PG_MAJOR" 2>/dev/null || true
   sleep 3
 
-  # Wait briefly for socket
-  for i in 1 2 3 4 5; do
-    if psql -U postgres -c '\q' 2>/dev/null; then break; fi
+  # Detect the superuser. Prefer the one captured on the old Mac, then the
+  # Homebrew default (OS username), then a literal "postgres" role. Retry while
+  # the freshly-started server warms up.
+  captured_su=""
+  [ -f "$BUNDLE/databases/postgres-superuser.txt" ] && captured_su=$(head -1 "$BUNDLE/databases/postgres-superuser.txt" 2>/dev/null)
+  pg_superuser=""
+  for _ in 1 2 3 4 5; do
+    for cand in "$captured_su" "$(whoami)" postgres; do
+      [ -z "$cand" ] && continue
+      if psql -U "$cand" -d postgres -c '\q' 2>/dev/null || psql -U "$cand" -c '\q' 2>/dev/null; then
+        pg_superuser="$cand"; break
+      fi
+    done
+    [ -n "$pg_superuser" ] && break
     sleep 2
   done
 
-  if psql -U postgres -f "$BUNDLE/databases/postgres-all.sql" 2>/dev/null; then
-    echo "[lane-g]   Postgres restored."
+  if [ -z "$pg_superuser" ]; then
+    echo "[lane-g]   FAIL: could not connect to Postgres. Start it: brew services start postgresql@$PG_MAJOR"
+    audit_log "psql_restore" "no_superuser_reachable" 1
+  elif psql -U "$pg_superuser" -f "$BUNDLE/databases/postgres-all.sql" 2>/dev/null; then
+    echo "[lane-g]   Postgres restored as superuser '$pg_superuser'."
     audit_log "psql_restore" "$BUNDLE/databases/postgres-all.sql" 0
   else
     echo "[lane-g]   FAIL: psql restore had errors. Check service status."

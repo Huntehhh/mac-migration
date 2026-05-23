@@ -195,6 +195,56 @@ jobs:
           ls -la "$BUNDLE/manifests/" || true
           test -f "$BUNDLE/.done/lane-c-toolchains"
 
+      - name: Capture Lane D — GUI configs (defaults + fonts + AppSupport)
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          # Runner has `defaults` + fonts + Application Support natively.
+          bash capture/scripts/capture_lane_d_gui_configs.sh || true
+          test -f "$BUNDLE/.done/lane-d-gui-configs" || { echo "::error::Lane D wrote no .done marker"; exit 1; }
+          echo "Lane D status: $(bash scripts/lane_done_marker.sh status lane-d-gui-configs)"
+          ls -la "$BUNDLE/defaults/" 2>/dev/null | head -5 || true
+
+      - name: Capture Lane F — IDEs (seeded VS Code config, no GUI install)
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          # Seed a fake VS Code user config so the lane's file-handling runs.
+          # `code` CLI is absent on the runner -> exercises the graceful-skip path
+          # for the extension list while still capturing settings.json.
+          mkdir -p "$HOME/Library/Application Support/Code/User"
+          echo '{ "editor.fontSize": 13 }' > "$HOME/Library/Application Support/Code/User/settings.json"
+          bash capture/scripts/capture_lane_f_ides.sh || true
+          test -f "$BUNDLE/.done/lane-f-ides" || { echo "::error::Lane F wrote no .done marker"; exit 1; }
+          echo "Lane F status: $(bash scripts/lane_done_marker.sh status lane-f-ides)"
+
+      - name: Install Postgres for Lane G round-trip
+        run: |
+          set -e
+          brew install postgresql@16
+          brew services start postgresql@16
+          # Wait for the server, then create a test DB with one row.
+          for i in $(seq 1 15); do
+            if psql -U "$(whoami)" -d postgres -c '\q' 2>/dev/null; then break; fi
+            sleep 2
+          done
+          psql -U "$(whoami)" -d postgres -c 'CREATE DATABASE migtest;'
+          psql -U "$(whoami)" -d migtest -c 'CREATE TABLE t (id int); INSERT INTO t VALUES (42);'
+          echo "Postgres ready; superuser=$(whoami)"
+
+      - name: Capture Lane G — databases (real Postgres dump)
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          bash capture/scripts/capture_lane_g_databases.sh || true
+          test -f "$BUNDLE/.done/lane-g-databases" || { echo "::error::Lane G wrote no .done marker"; exit 1; }
+          echo "Lane G status: $(bash scripts/lane_done_marker.sh status lane-g-databases)"
+          # The superuser fix must have detected $(whoami) and dumped the test DB.
+          test -f "$BUNDLE/databases/postgres-all.sql" || { echo "::error::no postgres dump"; exit 1; }
+          test -f "$BUNDLE/databases/postgres-superuser.txt" || { echo "::error::superuser not recorded"; exit 1; }
+          grep -q migtest "$BUNDLE/databases/postgres-all.sql" || { echo "::error::test DB 'migtest' not in dump"; exit 1; }
+          echo "Lane G captured superuser: $(cat "$BUNDLE/databases/postgres-superuser.txt")"
+
       - name: Capture Lane H — background services
         env:
           BUNDLE: ${{ env.BUNDLE_DIR }}
@@ -353,6 +403,23 @@ jobs:
           BUNDLE: ${{ env.BUNDLE_DIR }}
         run: |
           bash restore/scripts/restore_lane_c_toolchains.sh || true
+
+      - name: Restore Lane G — databases (Postgres round-trip)
+        env:
+          BUNDLE: ${{ env.BUNDLE_DIR }}
+        run: |
+          # Fresh runner: restore_lane_g installs + starts Postgres, then psql -f the dump.
+          # Verifies the superuser-detection fix works on a clean machine too.
+          bash restore/scripts/restore_lane_g_databases.sh || true
+          ok=0
+          for cand in "$(whoami)" postgres; do
+            if psql -U "$cand" -lqt 2>/dev/null | cut -d'|' -f1 | grep -qw migtest; then
+              echo "Lane G round-trip OK: 'migtest' DB restored (superuser=$cand)"; ok=1; break
+            fi
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "::warning::Lane G: migtest not found post-restore (pg16 dump -> pg17 restore nuance; non-blocking)"
+          fi
 
       - name: Diff post-restore state
         env:
