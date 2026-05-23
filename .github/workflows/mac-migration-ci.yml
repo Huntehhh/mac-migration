@@ -79,6 +79,29 @@ jobs:
           sys.exit(1 if fail else 0)
           PY
 
+      - name: shellcheck (errors block, warnings informational)
+        run: |
+          shellcheck --version
+          # SC1091 = "can't follow non-constant source" — expected; scripts source
+          # siblings via dynamically-built paths. Suppress it in both passes.
+          # Blocking pass: error-level only. A real bug here fails the build.
+          echo "=== shellcheck --severity=error (BLOCKING) ==="
+          err=0
+          while IFS= read -r f; do
+            shellcheck --severity=error --shell=bash -e SC1091 "$f" || err=1
+          done < <(find . -name '*.sh' -type f)
+          if [ "$err" -ne 0 ]; then
+            echo "::error::shellcheck found error-level issues — fix before merge"
+            exit 1
+          fi
+          echo "No error-level shellcheck findings."
+          # Informational pass: warning-level. Surfaced, NOT blocking (incremental cleanup).
+          echo "=== shellcheck --severity=warning (informational, non-blocking) ==="
+          while IFS= read -r f; do
+            shellcheck --severity=warning --shell=bash -e SC1091 "$f" || true
+          done < <(find . -name '*.sh' -type f)
+          echo "Warning-level findings above are tracked for incremental cleanup; they do not block."
+
   # ---------------------------------------------------------------------------
   # Stage 2 — capture phase on macos-15.
   # Exercises every lane the runner can support, produces a real bundle.

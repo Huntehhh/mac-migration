@@ -72,6 +72,27 @@ for required in manifest.json manifest.sha256; do
   fi
 done
 
+# Step 2.5: schema_version compatibility check
+# This restore script understands schema_version "1". A bundle written by a
+# newer skill version may have fields/layout this restore can't handle.
+SUPPORTED_SCHEMA="1"
+if command -v jq > /dev/null 2>&1; then
+  bundle_schema=$(jq -r '.schema_version // .version // "unknown"' "$BUNDLE/manifest.json" 2>/dev/null)
+  if [ "$bundle_schema" = "unknown" ]; then
+    echo "[unpack_bundle] WARNING: manifest has no schema_version. Assuming legacy schema; proceeding."
+  elif [ "$bundle_schema" != "$SUPPORTED_SCHEMA" ]; then
+    echo "[unpack_bundle] FATAL: bundle schema_version='$bundle_schema' but this restore supports '$SUPPORTED_SCHEMA'."
+    echo "  The bundle was created by a different mac-migration version."
+    echo "  Fix: use a matching skill version, OR re-capture on the old Mac with this version."
+    audit_log "unpack" "schema_mismatch" "$bundle_schema" 1
+    exit 6
+  else
+    echo "[unpack_bundle] schema_version $bundle_schema OK."
+  fi
+else
+  echo "[unpack_bundle] WARNING: jq not found; skipping schema_version check."
+fi
+
 # Step 3: verify per-file SHA256 against manifest.sha256
 echo "[unpack_bundle] Verifying file integrity against manifest.sha256 ..."
 cd "$BUNDLE"

@@ -168,6 +168,74 @@ check_gpg_key() {
 }
 
 # -----------------------------------------------------------------------------
+# Check 8: GPG key sideband export (hard fail) -- prevents the lockout trap.
+#
+# THE TRAP: Lane I encrypts the bundle WITH the user's GPG key, and the key
+# itself (~/.gnupg/) is captured INSIDE Lane I. On a fresh Mac with no key,
+# you cannot decrypt the bundle to retrieve the key you need to decrypt it.
+# Permanent lockout, silent until restore day.
+#
+# THE GUARD: export the secret key NOW to a file OUTSIDE the bundle, named so
+# the user cannot miss it. They must carry THIS file to the new Mac via a
+# separate channel (USB / password manager) and import it BEFORE restore.
+# Passphrase-protected keys stay passphrase-locked in the export, so the file
+# is no more sensitive than the key already is.
+# -----------------------------------------------------------------------------
+check_gpg_sideband_export() {
+  # Only run if a key exists (Check 7 handles the no-key case).
+  command -v gpg >/dev/null 2>&1 || return
+  local secret_count
+  secret_count=$(gpg --list-secret-keys --with-colons 2>/dev/null | grep -c '^sec:' || true)
+  [ "${secret_count:-0}" -gt 0 ] || return
+
+  # Export OUTSIDE $BUNDLE so it is never packaged + encrypted into the bundle.
+  local export_dir="$HOME"
+  case "$BUNDLE" in
+    "$HOME") export_dir="$HOME/.." ;;   # paranoid: if BUNDLE==HOME, step out
+  esac
+  local key_file="$export_dir/migration-gpg-key-BRING-SEPARATELY.asc"
+  local trust_file="$export_dir/migration-gpg-ownertrust-BRING-SEPARATELY.txt"
+
+  if gpg --batch --yes --export-secret-keys --armor > "$key_file" 2>/dev/null \
+     && [ -s "$key_file" ]; then
+    chmod 600 "$key_file" 2>/dev/null || true
+    gpg --export-ownertrust > "$trust_file" 2>/dev/null || true
+    chmod 600 "$trust_file" 2>/dev/null || true
+    record_pass "gpg_sideband" "exported to $key_file -- CARRY THIS SEPARATELY (USB / password manager), NOT inside the bundle"
+    # Also drop a loud, unmissable warning file at the bundle root.
+    cat > "$BUNDLE/GPG-KEY-WARNING.txt" <<EOF
+CRITICAL -- READ BEFORE WIPING THE OLD MAC
+==========================================
+
+Your migration bundle's credentials (Lane I) are GPG-encrypted with your key.
+Your GPG key itself is INSIDE that encrypted bundle. That means:
+
+  On the new Mac, you CANNOT decrypt the bundle until your GPG key is imported,
+  and the only copy is locked inside the bundle you're trying to open.
+
+To avoid permanent lockout, your key was exported here (OUTSIDE the bundle):
+
+  $key_file
+  $trust_file
+
+DO THIS NOW, before wiping the old Mac:
+  1. Copy both files above to a USB stick OR your password manager.
+  2. Do NOT put them in the migration bundle.
+  3. On the new Mac, BEFORE running restore:
+       gpg --import "migration-gpg-key-BRING-SEPARATELY.asc"
+       gpg --import-ownertrust "migration-gpg-ownertrust-BRING-SEPARATELY.txt"
+  4. Then run restore. Lane I will decrypt.
+
+If you use a YubiKey / smartcard for GPG, you don't need these files -- just
+bring the YubiKey. But verify 'gpg --card-status' works on the new Mac first.
+EOF
+  else
+    rm -f "$key_file" 2>/dev/null || true
+    record_fail "gpg_sideband" "Could not export GPG secret key. Export manually: gpg --export-secret-keys -a > ~/migration-gpg-key.asc and carry it to the new Mac separately, or you will be locked out of the encrypted bundle."
+  fi
+}
+
+# -----------------------------------------------------------------------------
 # Run all checks
 # -----------------------------------------------------------------------------
 check_disk_space
@@ -177,6 +245,7 @@ check_mise_installed
 check_chezmoi_pushed
 check_fda
 check_gpg_key
+check_gpg_sideband_export
 
 # -----------------------------------------------------------------------------
 # Render results to stdout

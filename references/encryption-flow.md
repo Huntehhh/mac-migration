@@ -1,5 +1,14 @@
 # Lane I Credentials — GPG Encryption Flow
 
+> ## ⚠ CRITICAL — THE LOCKOUT TRAP (read before anything else)
+>
+> Lane I encrypts the bundle **with** your GPG key. Your GPG private key (`~/.gnupg/`) is also captured **inside** that encrypted bundle. On a fresh Mac with no key imported, you cannot decrypt the bundle to reach the key — and the only copy is locked inside the bundle you're trying to open. **Permanent, silent lockout.**
+>
+> **The escape hatch (automated by `preflight_check.sh`):** preflight exports your key to two files OUTSIDE the bundle —
+> `~/migration-gpg-key-BRING-SEPARATELY.asc` and `~/migration-gpg-ownertrust-BRING-SEPARATELY.txt` — and writes `GPG-KEY-WARNING.txt` at the bundle root.
+>
+> **You must:** carry those two files to the new Mac via a SEPARATE channel (USB / password manager), then `gpg --import` both **before** running restore. Passphrase-protected keys stay passphrase-locked in the export, so the files are no more sensitive than the key already is. YubiKey/smartcard users: bring the YubiKey instead and verify `gpg --card-status` on the new Mac.
+
 **Audience:** The `mac-migration` skill (capture + restore + inventory preflight). Lane I is the credentials lane — SSH private keys, GPG keys, AWS access keys, cloud CLI tokens, npm tokens, cargo tokens, WireGuard private keys.
 **Purpose:** Define how Lane I plaintext gets sealed into `credentials.tar.gz.gpg` before the bundle leaves the old Mac, and how it gets unsealed on the new Mac.
 

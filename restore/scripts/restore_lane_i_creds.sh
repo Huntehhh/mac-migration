@@ -42,9 +42,16 @@ fi
 
 if ! gpg --list-secret-keys 2>/dev/null | grep -q sec; then
   echo "[lane-i] FATAL: no GPG secret key available on this Mac."
-  echo "[lane-i]   Import your personal GPG secret key first:"
-  echo "[lane-i]     gpg --import /path/to/your-private-key.asc"
-  echo "[lane-i]   OR plug in your YubiKey if you use hardware GPG."
+  echo "[lane-i]   The bundle's credentials are encrypted with YOUR key, which is"
+  echo "[lane-i]   itself inside the (still-locked) bundle. You must import the"
+  echo "[lane-i]   out-of-band copy FIRST. On the old Mac, preflight exported it to:"
+  echo "[lane-i]     migration-gpg-key-BRING-SEPARATELY.asc"
+  echo "[lane-i]     migration-gpg-ownertrust-BRING-SEPARATELY.txt"
+  echo "[lane-i]   Copy those from your USB / password manager, then run:"
+  echo "[lane-i]     gpg --import migration-gpg-key-BRING-SEPARATELY.asc"
+  echo "[lane-i]     gpg --import-ownertrust migration-gpg-ownertrust-BRING-SEPARATELY.txt"
+  echo "[lane-i]   OR plug in your YubiKey if you use hardware GPG (verify: gpg --card-status)."
+  echo "[lane-i]   See GPG-KEY-WARNING.txt at the bundle root for full details."
   exit 2
 fi
 

@@ -666,6 +666,7 @@ jq -n \
   --argjson lane_j "${LANE_J:-0}" \
   --argjson opt_outs "${PRIOR_OPTOUTS:-[]}" \
   '{
+    schema_version: "1",
     version: "1",
     generated_at: $ts,
     host: {
