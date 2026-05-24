@@ -22,7 +22,7 @@ jobs:
     name: Syntax + ASCII checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: bash -n on every shell script
         run: |
@@ -114,7 +114,7 @@ jobs:
     needs: syntax
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Verify runner prereqs
         run: |
@@ -355,7 +355,7 @@ jobs:
     needs: capture-smoke
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download the bundle from capture stage
         uses: actions/download-artifact@v4
