@@ -14,6 +14,17 @@ git clone https://github.com/Huntehhh/mac-migration ~/.claude/skills/mac-migrati
 
 Then, in any Claude Code session, say **"audit my Mac state"** or **"I'm migrating Macs."** The skill runs a ~60-second scan and shows exactly what it would capture before touching anything. You opt out of whatever you don't want.
 
+### Or run it standalone (no Claude needed)
+
+```bash
+./migrate.sh inventory        # Phase 1: scan -> manifest.json (read-only)
+./migrate.sh capture          # Phase 2: preflight -> scan -> all lanes -> bundle
+./migrate.sh restore          # Phase 3: unpack -> all lanes -> verify (on the new Mac)
+./migrate.sh status           # what's been captured/restored so far
+```
+
+Idempotent and cron-rerunnable — re-running skips finished lanes (pass `--force` to redo). `capture` accepts `--dry-run` and `--tarball`.
+
 ## How it works
 
 Composable parent skill + 4 atomic sub-skills, one per phase:

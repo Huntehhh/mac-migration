@@ -10,6 +10,9 @@ env:
   BUNDLE_DIR: ${{ github.workspace }}/.ci-bundle
   GPG_KEY_PASSPHRASE: ci-test-passphrase
   GPG_KEY_NAME: mac-migration-ci@example.com
+  # Opt JS actions (checkout, upload/download-artifact) onto Node 24 now, ahead of
+  # the June 2026 forced cutover. Silences the Node 20 deprecation annotation.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ---------------------------------------------------------------------------

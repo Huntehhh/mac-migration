@@ -242,10 +242,35 @@ check_disk_space
 check_brew_doctor
 check_mas_signed_in
 check_mise_installed
+# -----------------------------------------------------------------------------
+# Check 9: bundle size estimate (informational) -- "know before you AirDrop it"
+# -----------------------------------------------------------------------------
+check_bundle_size_estimate() {
+  # Rough heads-up only. The heavy lanes are D (Application Support + fonts) and
+  # G (database dumps). Sum the big sources in MB; report GB.
+  local total_mb=0 mb
+  for d in "$HOME/Library/Application Support" "$HOME/Library/Fonts"; do
+    if [ -d "$d" ]; then
+      mb=$(du -sm "$d" 2>/dev/null | awk '{print $1}')
+      total_mb=$((total_mb + ${mb:-0}))
+    fi
+  done
+  # Postgres data dir (a proxy for dump size) if present.
+  for pg in /opt/homebrew/var/postgresql@* /usr/local/var/postgresql@*; do
+    if [ -d "$pg" ]; then
+      mb=$(du -sm "$pg" 2>/dev/null | awk '{print $1}')
+      total_mb=$((total_mb + ${mb:-0}))
+    fi
+  done
+  local gb=$(( total_mb / 1024 ))
+  record_pass "bundle_estimate" "~${gb}GB (rough; caches excluded at capture time). Have a USB / transfer channel ready for at least this much."
+}
+
 check_chezmoi_pushed
 check_fda
 check_gpg_key
 check_gpg_sideband_export
+check_bundle_size_estimate
 
 # -----------------------------------------------------------------------------
 # Render results to stdout
